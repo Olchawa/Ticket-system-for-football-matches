@@ -7,8 +7,8 @@ import java.rmi.registry.Registry;
 public class Server {
 
 	
-	Registry reg; // rejestr nazw obiektow
-	ServantRemoteImpl servant; // klasa us³ugowa
+	Registry reg; 
+	ServantRemoteImpl servant; 
 	
 	
 	public static void main(String[] args) {
