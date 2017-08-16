@@ -1,13 +1,17 @@
 package rmi.common;
 
+import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-public class Event {
+public class Event implements Serializable {
 
+	private static final long serialVersionUID = 1L;
 	private String name;
 	private String place;
-	private long date;
+	private Date date;
 	private int ticketLeft;
 	private int ticketBooked;
 
@@ -17,7 +21,7 @@ public class Event {
 
 	}
 
-	public Event(String name, String place, long date, int ticketLeft, int ticketBooked,
+	public Event(String name, String place, Date date, int ticketLeft, int ticketBooked,
 			List<ClientAccount> participants) {
 
 		this.name = name;
@@ -44,11 +48,11 @@ public class Event {
 		this.place = place;
 	}
 
-	public long getDate() {
+	public Date getDate() {
 		return date;
 	}
 
-	public void setDate(long date) {
+	public void setDate(Date date) {
 		this.date = date;
 	}
 
@@ -80,6 +84,13 @@ public class Event {
 	public String toString() {
 		return "Event [name=" + name + ", place=" + place + ", date=" + date + ", ticketLeft=" + ticketLeft
 				+ ", ticketBooked=" + ticketBooked + ", participants=" + participants + "]";
+	}
+
+	public String toStringForFileName() {
+		SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+		String strDate = formatter.format(date);
+
+		return name + "_" + place + "_" + strDate + "_" + ticketLeft + ".afb";
 	}
 
 }

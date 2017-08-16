@@ -2,11 +2,12 @@ package rmi.common;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 
 public interface Common extends Remote {
 	
 	// admin actions
-	void addEvent()throws RemoteException;	
+	void addEvent(Event event)throws RemoteException;	
 	void updatEvent()throws RemoteException;	
 	
 	// client actions
@@ -18,7 +19,8 @@ public interface Common extends Remote {
 	void cancelReservation()throws RemoteException; 
 	
 	// both
-	String showEvents()throws RemoteException; 
+	ArrayList<Event> getEvents()throws RemoteException;
+	
 	
 
 }
