@@ -6,12 +6,9 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.InputMismatchException;
 import java.util.Scanner;
-
-import rmi.common.ClientAccount;
 import rmi.common.Common;
 import rmi.common.Event;
 
@@ -19,8 +16,9 @@ public class Admin implements Runnable {
 
 	// global variables
 	Common remoteObject;
-	private Scanner input = new Scanner(System.in);
-	public static final String ANSI_RED = "\u001B[31m";
+	private static Scanner input = new Scanner(System.in);
+	int adminTypeFlag = 1;
+	String separator = "\n=====================================";
 
 	public static void main(String[] args) throws IndexOutOfBoundsException {
 
@@ -35,14 +33,17 @@ public class Admin implements Runnable {
 			remoteObject = (Common) reg.lookup("Server");
 
 			System.out.println("Welcome in  TBS - Ticket Booking System for football matches ");
+			remoteObject.LogMessage("Admin has logged in.");
 
 			while (true) {
+
 				String choosenOption;
-				System.out.println("\nWhat you want to do? ");
-				System.out.println("[a]dd new event, [e]vents list showcase, [d]isconnect: ");
+				System.out.println(separator + "\nWhat you want to do? ");
+				System.out.println("[a]dd new event, [e]vents list showcase,\n[u]pdate the event, [d]isconnect: ");
+
 				if (input.hasNextLine()) {
 					choosenOption = input.nextLine();
-					if (!choosenOption.matches("[aed]")) {
+					if (!choosenOption.matches("[aeud]")) {
 						System.err.println("You entered invalid command!");
 						continue;
 					}
@@ -51,9 +52,13 @@ public class Admin implements Runnable {
 						remoteObject.addEvent(setEventDetails());
 						break;
 					case "e":
-						showEvents(remoteObject.getEvents());
+						System.out.println(remoteObject.showEvents(adminTypeFlag));
+						break;
+					case "u":
+						performUpdate();
 						break;
 					case "d":
+						remoteObject.LogMessage("Admin has logged out.");
 						System.out.println("Thanks for using the TBS!!!");
 						return;
 					}
@@ -67,61 +72,95 @@ public class Admin implements Runnable {
 		}
 	}
 
-	private void showEvents(ArrayList<Event> events) {
-		int matchId = 0;
-		for (Event e : events) {
-			System.out.println("\n=====================================");
-			System.out.println("Match ID: " + matchId);
-			System.out.println("Name: " + e.getName());
-			System.out.println("Place: " + e.getPlace());
-			System.out.println("Date: " + e.getDate());
-			System.out.println("Ticket left: " + e.getTicketLeft());
-			System.out.println("Number of participants: " + e.getTicketBooked());
-			matchId++;
-		}
+	private void performUpdate() throws RemoteException {
+		System.out.println(remoteObject.showEvents(adminTypeFlag));
+		int indexForUpdate = getIntegerInput(separator + "\nTo update select the correct [Match ID]: ");
+		// clear the buffer
+		input.nextLine();
 
+		if (indexForUpdate >= remoteObject.getEventsNumber()) {
+			System.out.println(separator + "\nINVALID MATCH INDEX!!!");
+		} else {
+
+			Event selectedEvent = null;
+			selectedEvent = remoteObject.getEvent(indexForUpdate);
+			System.out.println(separator + "\nSelected event: \n" + selectedEvent.toString());
+
+			// set updated event
+			System.out.println("\nSet new properties: " + separator);
+			selectedEvent.setName(typeStringInput("Event name: "));
+			selectedEvent.setPlace(typeStringInput("Event place: "));
+			selectedEvent.setDate(typeEventDate());
+			selectedEvent.setTicketLeft(typeTicketNumber());
+
+			// save the update
+			remoteObject.updatEvent(selectedEvent, indexForUpdate);
+		}
 	}
 
 	private Event setEventDetails() {
 
-		String name = null, place = null;
-		Date date = null;
-		int ticketLeft = 0, ticketBooked = 0;
-		List<ClientAccount> participants = new ArrayList<ClientAccount>();
-
 		// user input
-		System.out.println("Event name:");
-		name = input.nextLine();
+		String name = typeStringInput("Event name: ");
+		String place = typeStringInput("Event place: ");
+		Date date = typeEventDate();
+		int ticketLeft = typeTicketNumber();
 
-		System.out.println("Event place:");
-		place = input.nextLine();
+		Event newEvent = new Event(name, place, date, ticketLeft);
+		return newEvent;
+	}
 
-		System.out.println("Date of the event [dd-M-yyyy hh:mm:ss]");
-		date = setDate();
+	private Date setDate() {
+		Date date=null;
+		int value = -1;
+		while (value < 0) {
+			SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
+			String dateString=input.nextLine();
+			try {
+				date = formatter.parse(dateString); 
+				System.out.println("Date is: " + date);
+				value=1;
+			} catch (ParseException e) {
+				System.out.println("Date format must be: [dd-M-yyyy hh:mm:ss]");		
+			}
+		}
+		return date;
 
+	}
+
+	String typeStringInput(String inputInfo) {
+		System.out.println(inputInfo);
+		return input.nextLine();
+	}
+
+	Date typeEventDate() {
+		System.out.println("Date of the event [dd-MM-yyyy hh:mm:ss]");
+		return setDate();
+	}
+
+	Integer typeTicketNumber() {
+		int ticketLeft = 0;
 		System.out.println("Number of tickets available for booking:");
 		try {
 			ticketLeft = Integer.parseInt(input.nextLine());
 		} catch (NumberFormatException e) {
 			e.printStackTrace();
 		}
-
-		Event newEvent = new Event(name, place, date, ticketLeft, ticketBooked, participants);
-
-		return newEvent;
+		return ticketLeft;
 	}
 
-	private Date setDate() {
-
-		SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
-		try {
-			Date date = formatter.parse("08-09-2017 20:45:00");
-			System.out.println("Date is: " + date);
-			return date;
-		} catch (ParseException e) {
-			e.printStackTrace();
-			return null;
+	public static int getIntegerInput(String prompt) {
+		int value = -1;
+		while (value < 0) {
+			try {
+				System.out.print(prompt);
+				value = input.nextInt();
+			} catch (InputMismatchException ime) {
+				System.err.println("Incorrect entry. Please input only a positive integer.");
+				input.nextLine();
+			}
 		}
-
+		return value;
 	}
+
 }

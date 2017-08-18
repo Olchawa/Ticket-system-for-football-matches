@@ -1,33 +1,58 @@
 package rmi.common;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
 
 public class ClientAccount implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	private String firstName;
 	private String lastName;
 	private String password;
 	private String email;
 
-	List<Event> events = new ArrayList<Event>();
+	LinkedHashMap<String,Integer> events;
 
 	public ClientAccount() {
 
 	}
 
-	public ClientAccount(String firstName, String lastName, String password, String email, List<Event> events) {
+	public ClientAccount(String firstName, String lastName, String password, String email) {
 
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.password = password;
 		this.email = email;
+	}
+
+	public LinkedHashMap<String,Integer> getEvents() {
+		return events;
+	}
+
+	public void setEvents(LinkedHashMap<String,Integer>  events) {
 		this.events = events;
 	}
 
+	// functions for updating client events
+	public void add(Event tempEvent,int ticketsBooked) {
+		
+		String key =tempEvent.getName()+"\n"+tempEvent.getPlace()+"\n"+tempEvent.getStringDate();
+		if (events == null) {
+			events = new LinkedHashMap<>();
+		}
+		events.computeIfPresent(key, (k, v) -> v + ticketsBooked);
+		events.putIfAbsent(key,ticketsBooked);
+		
+	}
+	
+	public void remove(String key) {
+		if(events.containsKey(key)){
+			events.remove(key);
+		}
+	}
+	
+	
 	public String getFirstName() {
 		return firstName;
 	}
@@ -52,14 +77,6 @@ public class ClientAccount implements Serializable {
 		this.password = password;
 	}
 
-	public List<Event> getEvents() {
-		return events;
-	}
-
-	public void setEvents(List<Event> events) {
-		this.events = events;
-	}
-
 	public String getEmail() {
 		return email;
 	}
@@ -72,6 +89,10 @@ public class ClientAccount implements Serializable {
 	public String toString() {
 		return "ClientAccount [firstName=" + firstName + ", lastName=" + lastName + ", password=" + password
 				+ ", email=" + email + ", events=" + events + "]";
+	}
+
+	public String toStringForFileName() {
+		return firstName + "_" + lastName + "_" + email + ".usr";
 	}
 
 }

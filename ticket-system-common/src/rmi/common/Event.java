@@ -2,9 +2,9 @@ package rmi.common;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
 
 public class Event implements Serializable {
 
@@ -13,23 +13,63 @@ public class Event implements Serializable {
 	private String place;
 	private Date date;
 	private int ticketLeft;
-	private int ticketBooked;
+	private int ticketBooked = 0;
 
-	List<ClientAccount> participants = new ArrayList<ClientAccount>();
+	LinkedHashMap<String, Integer> participants;
 
 	public Event() {
 
 	}
 
-	public Event(String name, String place, Date date, int ticketLeft, int ticketBooked,
-			List<ClientAccount> participants) {
+	public Event(String name, String place, Date date, int ticketLeft) {
 
 		this.name = name;
 		this.place = place;
 		this.date = date;
 		this.ticketLeft = ticketLeft;
-		this.ticketBooked = ticketBooked;
+	}
+
+	public LinkedHashMap<String, Integer> getParticipants() {
+		return participants;
+	}
+
+	public String showParticipants() {
+
+		StringBuilder listShowCase = new StringBuilder();
+		if (participants != null && !participants.isEmpty()) {
+			for (Entry<String, Integer> person : participants.entrySet()) {
+				listShowCase.append("\n" + person.getKey() + " ----  ticket bought : " + person.getValue());
+
+			}
+			
+		}
+		return listShowCase.toString();
+	}
+
+	public void setParticipants(LinkedHashMap<String, Integer> participants) {
 		this.participants = participants;
+	}
+
+	public void add(String name, int ticket) {
+
+		if (participants == null) {
+			participants = new LinkedHashMap<>();
+		}
+		participants.put(name, ticket);
+		if (ticketLeft > 0) {
+			ticketLeft -= ticket;
+			ticketBooked += ticket;
+		}
+	}
+
+	public void remove(String key, int ticket) {
+
+		if (participants.containsKey(key)) {
+			participants.remove(key);
+		}
+		ticketLeft += ticket;
+		ticketBooked -= ticket;
+
 	}
 
 	public String getName() {
@@ -72,25 +112,19 @@ public class Event implements Serializable {
 		this.ticketBooked = ticketBooked;
 	}
 
-	public List<ClientAccount> getParticipants() {
-		return participants;
-	}
-
-	public void setParticipants(List<ClientAccount> participants) {
-		this.participants = participants;
+	public String getStringDate() {
+		SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+		return formatter.format(date);
 	}
 
 	@Override
 	public String toString() {
-		return "Event [name=" + name + ", place=" + place + ", date=" + date + ", ticketLeft=" + ticketLeft
-				+ ", ticketBooked=" + ticketBooked + ", participants=" + participants + "]";
+		return " name = " + name + ",\n place = " + place + ",\n date = " + date + ",\n ticketLeft = " + ticketLeft
+				+ ",\n ticketBooked = " + ticketBooked;
 	}
 
 	public String toStringForFileName() {
-		SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
-		String strDate = formatter.format(date);
-
-		return name + "_" + place + "_" + strDate + "_" + ticketLeft + ".afb";
+		return name + "_" + place + "_" + getStringDate() + "_" + ".afb";
 	}
 
 }

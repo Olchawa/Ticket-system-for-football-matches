@@ -2,25 +2,27 @@ package rmi.common;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
 
 public interface Common extends Remote {
 	
-	// admin actions
+	// administrator actions
 	void addEvent(Event event)throws RemoteException;	
-	void updatEvent()throws RemoteException;	
+	void updatEvent(Event event, int index)throws RemoteException;	
 	
 	// client actions
-	void SignUp()throws RemoteException;	
-	void LogIn()throws RemoteException;
-	boolean verifyUser() throws RemoteException; 
-	void showUserBookedEvents()throws RemoteException; 
-	void bookTheEvents()throws RemoteException;
-	void cancelReservation()throws RemoteException; 
 	
-	// both
-	ArrayList<Event> getEvents()throws RemoteException;
+	// logging actions
+	void SignUp(ClientAccount newAccount)throws RemoteException;
+	ClientAccount LogIn(String userName, String password)throws RemoteException;
 	
+	// booking actions
+	void bookTheEvent(String userNick, int eventId, int ticketBooked)throws RemoteException;
+	void cancelReservation(String userNick,int ticketToReturn, String eventKey)throws RemoteException; 
 	
-
+	// general actions
+	String showEvents(int userTypeFlag)throws RemoteException;
+	Event getEvent(int indexOfEvent)throws RemoteException;
+	void LogMessage(String userName)throws RemoteException;
+	int getEventsNumber()throws RemoteException;
+	
 }
