@@ -110,9 +110,10 @@ public class Admin implements Runnable {
 		return newEvent;
 	}
 
-	private Date setDate() {
+	private Date typeEventDate() {
 		Date date=null;
 		int value = -1;
+		System.out.println("Date of the event [dd-MM-yyyy hh:mm:ss]");
 		while (value < 0) {
 			SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
 			String dateString=input.nextLine();
@@ -133,10 +134,7 @@ public class Admin implements Runnable {
 		return input.nextLine();
 	}
 
-	Date typeEventDate() {
-		System.out.println("Date of the event [dd-MM-yyyy hh:mm:ss]");
-		return setDate();
-	}
+	
 
 	Integer typeTicketNumber() {
 		int ticketLeft = 0;
