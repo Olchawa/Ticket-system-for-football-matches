@@ -6,6 +6,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -35,9 +39,59 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 	}
 
 	@Override
-	public void updatEvent(Event event, int index) throws RemoteException {
-		eventsList.set(index, event);
-		saveOnServer(event);
+	public void updatEvent(Event oldEvent, Event updateEvent) throws RemoteException {
+
+		String oldKey = oldEvent.getName() + "\n" + oldEvent.getPlace() + "\n" + oldEvent.getStringDate();
+		String newKey = updateEvent.getName() + "\n" + updateEvent.getPlace() + "\n" + updateEvent.getStringDate();
+
+		eventsList.forEach(event -> {
+			if (oldEvent.getName().equals(event.getName())) {
+				try {
+					// update event properties
+					event.setName(updateEvent.getName());
+					event.setPlace(updateEvent.getPlace());
+					event.setDate(updateEvent.getDate());
+					event.setTicketLeft(updateEvent.getTicketLeft());
+
+					saveOnServer(event);
+
+					// rename file if necessary
+					if (!oldKey.equals(newKey)) {
+
+						Path oldPath = Paths.get(dir + "\\" + oldEvent.toStringForFileName());
+						Path newPath = Paths.get(dir + "\\" + updateEvent.toStringForFileName());
+
+						try {
+							Files.move(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
+							Files.deleteIfExists(oldPath);
+							System.out.println("File was successfully renamed");
+
+						} catch (IOException e) {
+							e.printStackTrace();
+							System.out.println("Error: Unable to rename file");
+						}
+					}
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
+			}
+		});
+
+		// update event information for users
+
+		usersList.forEach(user -> {
+			if (user.hasKey(oldKey)) {
+				try {
+					user.updateEvents(oldKey, newKey);
+					saveOnServer(user);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+
 	}
 
 	// user actions
@@ -57,38 +111,16 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 	}
 
 	@Override
-	public void bookTheEvent(String userNick, int eventId, int ticketBooked) throws RemoteException {
-
-		// load user
-		Event event = eventsList.get(eventId);
-		String eventKey = event.getName() + "\n" + event.getPlace() + "\n" + event.getStringDate();
-		
-		// perform changes to even
-		event.add(userNick, ticketBooked);
-		saveOnServer(event);
-
-		// perform changes to user
-		usersList.forEach(user -> {
-			if (userNick.equals(user.getFirstName() + "_" + user.getLastName())) {
-				user.add(eventKey, ticketBooked);
-				try {
-					saveOnServer(user);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-
-	}
-
-	@Override
-	public void cancelReservation(String userNick, int ticketToReturn, String eventKey) throws RemoteException {
+	public void buyOrReturn(String userNick, int tickets, String eventKey, String action) throws RemoteException {
 
 		// perform changes to event
 		String[] keyParts = eventKey.split("\n");
 		eventsList.forEach(event -> {
 			if (keyParts[0].equals(event.getName())) {
-				event.remove(userNick, ticketToReturn);
+				if (action.equals("buy"))
+					event.add(userNick, tickets);
+				else if (action.equals("return"))
+					event.remove(userNick, tickets);
 				try {
 					saveOnServer(event);
 				} catch (Exception e) {
@@ -101,7 +133,10 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 		// perform changes to user
 		usersList.forEach(user -> {
 			if (userNick.equals(user.getFirstName() + "_" + user.getLastName())) {
-				user.remove(eventKey);
+				if (action.equals("buy"))
+					user.add(eventKey, tickets);
+				else if (action.equals("return"))
+					user.remove(eventKey);
 				try {
 					saveOnServer(user);
 				} catch (Exception e) {
@@ -109,22 +144,10 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 				}
 			}
 		});
+
 	}
 
 	// general actions
-
-	@Override
-	public void saveOnServer(Object object) throws RemoteException {
-
-		if (object instanceof Event) {
-			String name = ((Event) object).toStringForFileName();
-			serialize(object, name);
-		} else if (object instanceof User) {
-			String name = ((User) object).toStringForFileName();
-			serialize(object, name);
-		}
-
-	}
 
 	@Override
 	public int getEventsNumber() throws RemoteException {
@@ -159,7 +182,7 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 			} else {
 				listShowCase.append("\nMatch ID: " + matchId).append("\nName: " + e.getName())
 						.append("\nPlace: " + e.getPlace()).append("\nDate: " + e.getDate())
-						.append("\nTicket left: " + e.getTicketLeft());
+						.append("\nQuantity of tickets you can buy: " + e.getTicketLeft());
 				if (userTypeFlag == 1) {
 					listShowCase.append("\nNumber of participants: " + e.getTicketBooked())
 							.append("\nParticipants: " + e.showParticipants());
@@ -168,6 +191,19 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 			matchId++;
 		}
 		return listShowCase.toString();
+	}
+
+	@Override
+	public void saveOnServer(Object object) throws RemoteException {
+
+		if (object instanceof Event) {
+			String name = ((Event) object).toStringForFileName();
+			serialize(object, name);
+		} else if (object instanceof User) {
+			String name = ((User) object).toStringForFileName();
+			serialize(object, name);
+		}
+
 	}
 
 	// class for loading lists

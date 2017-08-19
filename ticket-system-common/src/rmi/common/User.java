@@ -14,6 +14,8 @@ public class User implements Serializable {
 
 	LinkedHashMap<String, Integer> events;
 
+	// constructor
+
 	public User() {
 
 	}
@@ -26,17 +28,9 @@ public class User implements Serializable {
 		this.email = email;
 	}
 
-	public LinkedHashMap<String, Integer> getEvents() {
-		return events;
-	}
-
-	public void setEvents(LinkedHashMap<String, Integer> events) {
-		this.events = events;
-	}
-
 	// functions for updating client events
 	public void add(String key, int ticketsBooked) {
-		
+
 		if (events == null) {
 			events = new LinkedHashMap<>();
 		}
@@ -49,6 +43,26 @@ public class User implements Serializable {
 		if (events.containsKey(key)) {
 			events.remove(key);
 		}
+	}
+
+	public boolean hasKey(String oldKey) {
+		return events.containsKey(oldKey);
+	}
+
+	public void updateEvents(String oldKey, String newKey) {
+
+		int value = events.remove(oldKey);
+		events.put(newKey, value);
+	}
+
+	// setters and getters
+
+	public LinkedHashMap<String, Integer> getEvents() {
+		return events;
+	}
+
+	public void setEvents(LinkedHashMap<String, Integer> events) {
+		this.events = events;
 	}
 
 	public String getFirstName() {
@@ -85,8 +99,8 @@ public class User implements Serializable {
 
 	@Override
 	public String toString() {
-		return "User [firstName=" + firstName + ", lastName=" + lastName + ", password=" + password
-				+ ", email=" + email + ", events=" + events + "]";
+		return "User [firstName=" + firstName + ", lastName=" + lastName + ", password=" + password + ", email=" + email
+				+ ", events=" + events + "]";
 	}
 
 	public String toStringForFileName() {

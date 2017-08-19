@@ -86,11 +86,14 @@ public class Admin implements Runnable {
 			Event selectedEvent = remoteObject.getEvent(indexForUpdate);
 			System.out.println(separator + "\nSelected event: \n" + selectedEvent.toString());
 
-			// set properties
-			selectedEvent = setEventDetails(selectedEvent);
-
+			// copy old properties for future update
+			Event oldEvent = new Event(selectedEvent.getName(), selectedEvent.getPlace(), selectedEvent.getDate(),
+					selectedEvent.getTicketLeft());
+			// set new properties
+			Event updatedEvent = setEventDetails(selectedEvent);
+		
 			// save the update
-			remoteObject.updatEvent(selectedEvent, indexForUpdate);
+			remoteObject.updatEvent(oldEvent, updatedEvent);
 		}
 	}
 

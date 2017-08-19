@@ -42,6 +42,9 @@ public class Client implements Runnable {
 
 			// main functionality
 			while (user != null) {
+				
+				// reloading user account - if any changes to event occurs
+				user = remoteObject.LogIn(user.getEmail(), user.getPassword());
 
 				String choosenOption;
 				System.out.println(separator + "\nWhat you want to do? "
@@ -64,9 +67,9 @@ public class Client implements Runnable {
 						resignBooking();
 						break;
 					case "d":
-						remoteObject.LogMessage("User " + user.getFirstName() + "_" + user.getLastName()
-								+ " has logged out.");
-						System.out.println("Thanks for using the TsS!!!");
+						remoteObject.LogMessage(
+								"User " + user.getFirstName() + "_" + user.getLastName() + " has logged out.");
+						System.out.println("Thanks for using our system!!!");
 						return;
 					}
 				}
@@ -82,10 +85,10 @@ public class Client implements Runnable {
 
 	private void booking() throws RemoteException {
 		System.out.println(remoteObject.showEvents(userFlag));
-		
+
 		int eventID = getIntegerInput(separator + "\nSelect the [Match ID]: \n ");
 		input.nextLine();
-		
+
 		if (eventID >= remoteObject.getEventsNumber()) {
 			System.out.println(separator + "\nINVALID MATCH INDEX!!!");
 		} else {
@@ -94,14 +97,13 @@ public class Client implements Runnable {
 			input.nextLine();
 			Event tempEvent = remoteObject.getEvent(eventID);
 			if (tempEvent.getTicketLeft() >= ticketBooked) {
-				
+
 				// add event to user
-				String key = tempEvent.getName() + "\n" + tempEvent.getPlace() + "\n" + tempEvent.getStringDate();
-				user.add(key, ticketBooked);
+				String eventKey = tempEvent.getName() + "\n" + tempEvent.getPlace() + "\n" + tempEvent.getStringDate();
+				user.add(eventKey, ticketBooked);
 				// perform changes on server
-				remoteObject.bookTheEvent(user.getFirstName() + "_" + user.getLastName(), eventID,
-						ticketBooked);
-				
+				remoteObject.buyOrReturn(user.getFirstName() + "_" + user.getLastName(), ticketBooked, eventKey, "buy");
+
 			} else if (tempEvent.getTicketLeft() == 0) {
 				System.out.println(separator + "\nTICKETS FOR THIS MATCH HAVE BEEN SOLD OUT!!!!");
 			}
@@ -125,7 +127,6 @@ public class Client implements Runnable {
 			// clear the buffer
 			input.nextLine();
 
-			
 			// temporary lists to store events keys
 			List<String> keyList = new ArrayList<String>();
 
@@ -141,8 +142,8 @@ public class Client implements Runnable {
 				// remove event from client
 				user.remove(keyToRemove);
 				// perform changes on server
-				remoteObject.cancelReservation(user.getFirstName() + "_" + user.getLastName(),
-						ticketToRemove, keyToRemove);
+				remoteObject.buyOrReturn(user.getFirstName() + "_" + user.getLastName(), ticketToRemove, keyToRemove,
+						"return");
 
 			} else {
 				System.out.println(separator + "\nTHE SELECTED INDEX IS INCORECT!!!");
@@ -170,7 +171,7 @@ public class Client implements Runnable {
 			System.out.println(separator + "\nYou have no tickets bought.");
 
 	}
-	
+
 	// GOOD //
 
 	boolean accessToSystem() throws RemoteException {
@@ -187,20 +188,20 @@ public class Client implements Runnable {
 				switch (choosenOption) {
 				case "1":
 					Logging();
-					remoteObject.LogMessage("User " + user.getFirstName() + "_" + user.getLastName()
-							+ " has logged in.");
+					remoteObject
+							.LogMessage("User " + user.getFirstName() + "_" + user.getLastName() + " has logged in.");
 					System.out.println(separator + "\nWelcome " + user.getFirstName() + "!!!");
 					break;
 
 				case "2":
 					remoteObject.SignUp(setUser());
-					remoteObject.LogMessage("New account created for user " + user.getFirstName() + "_"
-							+ user.getLastName() + ".");
+					remoteObject.LogMessage(
+							"New account created for user " + user.getFirstName() + "_" + user.getLastName() + ".");
 					System.out.println(separator + "\nWelcome " + user.getFirstName() + "!!!");
 					break;
 
 				case "3":
-					System.out.println("Thanks for using the TSS!!!");
+					System.out.println("Thanks for using our system!!!");
 					return false;
 				}
 			}
@@ -226,8 +227,8 @@ public class Client implements Runnable {
 			user = remoteObject.LogIn(email, password);
 
 			if (user == null) {
-				System.out.println(
-						separator + "\nNo such user in the TBS database! \nPassword or email is incorrect!" + separator);
+				System.out.println(separator + "\nNo such user in the TBS database! \nPassword or email is incorrect!"
+						+ separator);
 				continue;
 			}
 			return user;

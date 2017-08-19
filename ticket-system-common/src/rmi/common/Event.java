@@ -27,7 +27,7 @@ public class Event implements Serializable {
 		this.place = place;
 		this.date = date;
 		this.ticketLeft = ticketLeft;
-		this.ticketBooked=0;
+		this.ticketBooked = 0;
 	}
 
 	public LinkedHashMap<String, Integer> getParticipants() {
