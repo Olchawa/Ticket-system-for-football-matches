@@ -49,7 +49,8 @@ public class Admin implements Runnable {
 					}
 					switch (choosenOption) {
 					case "a":
-						remoteObject.addEvent(setEventDetails());
+						Event event = null;
+						remoteObject.addEvent(setEventDetails(event));
 						break;
 					case "e":
 						System.out.println(remoteObject.showEvents(adminTypeFlag));
@@ -82,47 +83,44 @@ public class Admin implements Runnable {
 			System.out.println(separator + "\nINVALID MATCH INDEX!!!");
 		} else {
 
-			Event selectedEvent = null;
-			selectedEvent = remoteObject.getEvent(indexForUpdate);
+			Event selectedEvent = remoteObject.getEvent(indexForUpdate);
 			System.out.println(separator + "\nSelected event: \n" + selectedEvent.toString());
 
-			// set updated event
-			System.out.println("\nSet new properties: " + separator);
-			selectedEvent.setName(typeStringInput("Event name: "));
-			selectedEvent.setPlace(typeStringInput("Event place: "));
-			selectedEvent.setDate(typeEventDate());
-			selectedEvent.setTicketLeft(typeTicketNumber());
+			// set properties
+			selectedEvent = setEventDetails(selectedEvent);
 
 			// save the update
 			remoteObject.updatEvent(selectedEvent, indexForUpdate);
 		}
 	}
 
-	private Event setEventDetails() {
-
+	// GOOD//
+	private Event setEventDetails(Event event) {
+		Event reEvent = event;
+		if (reEvent == null)
+			reEvent = new Event(null, null, null, 0);
 		// user input
-		String name = typeStringInput("Event name: ");
-		String place = typeStringInput("Event place: ");
-		Date date = typeEventDate();
-		int ticketLeft = typeTicketNumber();
-
-		Event newEvent = new Event(name, place, date, ticketLeft);
-		return newEvent;
+		System.out.println("\nSet properties: " + separator);
+		reEvent.setName(typeStringInput("Event name: "));
+		reEvent.setPlace(typeStringInput("Event place: "));
+		reEvent.setDate(typeEventDate());
+		reEvent.setTicketLeft(getIntegerInput("Number of tickets available for booking: "));
+		input.nextLine();
+		return reEvent;
 	}
 
 	private Date typeEventDate() {
-		Date date=null;
+		Date date = null;
 		int value = -1;
 		System.out.println("Date of the event [dd-MM-yyyy hh:mm:ss]");
 		while (value < 0) {
 			SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
-			String dateString=input.nextLine();
+			String dateString = input.nextLine();
 			try {
-				date = formatter.parse(dateString); 
-				System.out.println("Date is: " + date);
-				value=1;
+				date = formatter.parse(dateString);
+				value = 1;
 			} catch (ParseException e) {
-				System.out.println("Date format must be: [dd-M-yyyy hh:mm:ss]");		
+				System.out.println("Date format must be: [dd-M-yyyy hh:mm:ss]");
 			}
 		}
 		return date;
@@ -132,19 +130,6 @@ public class Admin implements Runnable {
 	String typeStringInput(String inputInfo) {
 		System.out.println(inputInfo);
 		return input.nextLine();
-	}
-
-	
-
-	Integer typeTicketNumber() {
-		int ticketLeft = 0;
-		System.out.println("Number of tickets available for booking:");
-		try {
-			ticketLeft = Integer.parseInt(input.nextLine());
-		} catch (NumberFormatException e) {
-			e.printStackTrace();
-		}
-		return ticketLeft;
 	}
 
 	public static int getIntegerInput(String prompt) {

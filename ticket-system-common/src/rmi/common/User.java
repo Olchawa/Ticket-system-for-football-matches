@@ -3,7 +3,7 @@ package rmi.common;
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 
-public class ClientAccount implements Serializable {
+public class User implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -12,13 +12,13 @@ public class ClientAccount implements Serializable {
 	private String password;
 	private String email;
 
-	LinkedHashMap<String,Integer> events;
+	LinkedHashMap<String, Integer> events;
 
-	public ClientAccount() {
+	public User() {
 
 	}
 
-	public ClientAccount(String firstName, String lastName, String password, String email) {
+	public User(String firstName, String lastName, String password, String email) {
 
 		this.firstName = firstName;
 		this.lastName = lastName;
@@ -26,33 +26,31 @@ public class ClientAccount implements Serializable {
 		this.email = email;
 	}
 
-	public LinkedHashMap<String,Integer> getEvents() {
+	public LinkedHashMap<String, Integer> getEvents() {
 		return events;
 	}
 
-	public void setEvents(LinkedHashMap<String,Integer>  events) {
+	public void setEvents(LinkedHashMap<String, Integer> events) {
 		this.events = events;
 	}
 
 	// functions for updating client events
-	public void add(Event tempEvent,int ticketsBooked) {
+	public void add(String key, int ticketsBooked) {
 		
-		String key =tempEvent.getName()+"\n"+tempEvent.getPlace()+"\n"+tempEvent.getStringDate();
 		if (events == null) {
 			events = new LinkedHashMap<>();
 		}
 		events.computeIfPresent(key, (k, v) -> v + ticketsBooked);
-		events.putIfAbsent(key,ticketsBooked);
-		
+		events.putIfAbsent(key, ticketsBooked);
+
 	}
-	
+
 	public void remove(String key) {
-		if(events.containsKey(key)){
+		if (events.containsKey(key)) {
 			events.remove(key);
 		}
 	}
-	
-	
+
 	public String getFirstName() {
 		return firstName;
 	}
@@ -87,7 +85,7 @@ public class ClientAccount implements Serializable {
 
 	@Override
 	public String toString() {
-		return "ClientAccount [firstName=" + firstName + ", lastName=" + lastName + ", password=" + password
+		return "User [firstName=" + firstName + ", lastName=" + lastName + ", password=" + password
 				+ ", email=" + email + ", events=" + events + "]";
 	}
 

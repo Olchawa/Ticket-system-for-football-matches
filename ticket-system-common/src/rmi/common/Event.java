@@ -13,7 +13,7 @@ public class Event implements Serializable {
 	private String place;
 	private Date date;
 	private int ticketLeft;
-	private int ticketBooked = 0;
+	private int ticketBooked;
 
 	LinkedHashMap<String, Integer> participants;
 
@@ -27,6 +27,7 @@ public class Event implements Serializable {
 		this.place = place;
 		this.date = date;
 		this.ticketLeft = ticketLeft;
+		this.ticketBooked=0;
 	}
 
 	public LinkedHashMap<String, Integer> getParticipants() {
@@ -38,10 +39,10 @@ public class Event implements Serializable {
 		StringBuilder listShowCase = new StringBuilder();
 		if (participants != null && !participants.isEmpty()) {
 			for (Entry<String, Integer> person : participants.entrySet()) {
-				listShowCase.append("\n" + person.getKey() + " ----  ticket bought : " + person.getValue());
+				listShowCase.append("\n " + person.getKey() + "  -  tickets : " + person.getValue());
 
 			}
-			
+
 		}
 		return listShowCase.toString();
 	}
@@ -124,7 +125,7 @@ public class Event implements Serializable {
 	}
 
 	public String toStringForFileName() {
-		return name + "_" + place + "_" + getStringDate() + "_" + ".afb";
+		return name + "_" + place + "_" + getStringDate() + "_" + ".me";
 	}
 
 }

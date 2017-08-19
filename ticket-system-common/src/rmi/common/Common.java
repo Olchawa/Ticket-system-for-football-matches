@@ -12,14 +12,15 @@ public interface Common extends Remote {
 	// client actions
 	
 	// logging actions
-	void SignUp(ClientAccount newAccount)throws RemoteException;
-	ClientAccount LogIn(String userName, String password)throws RemoteException;
+	void SignUp(User newAccount)throws RemoteException;
+	User LogIn(String email, String password)throws RemoteException;
 	
 	// booking actions
 	void bookTheEvent(String userNick, int eventId, int ticketBooked)throws RemoteException;
 	void cancelReservation(String userNick,int ticketToReturn, String eventKey)throws RemoteException; 
 	
 	// general actions
+	void saveOnServer(Object object) throws RemoteException;
 	String showEvents(int userTypeFlag)throws RemoteException;
 	Event getEvent(int indexOfEvent)throws RemoteException;
 	void LogMessage(String userName)throws RemoteException;

@@ -10,7 +10,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import rmi.common.ClientAccount;
+import rmi.common.User;
 import rmi.common.Common;
 import rmi.common.Event;
 
@@ -21,7 +21,7 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 	final String dir = System.getProperty("user.dir");
 
 	CopyOnWriteArrayList<Event> eventsList = new CopyOnWriteArrayList<Event>();
-	CopyOnWriteArrayList<ClientAccount> usersList = new CopyOnWriteArrayList<ClientAccount>();
+	CopyOnWriteArrayList<User> usersList = new CopyOnWriteArrayList<User>();
 
 	public ServantRemoteImpl() throws RemoteException {
 		(new LoadLIST()).start();
@@ -31,31 +31,26 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 	@Override
 	public void addEvent(Event recievedEvent) throws RemoteException {
 		eventsList.add(recievedEvent);
-		String name = recievedEvent.toStringForFileName();
-		serialize(recievedEvent, name);
+		saveOnServer(recievedEvent);
 	}
 
 	@Override
 	public void updatEvent(Event event, int index) throws RemoteException {
 		eventsList.set(index, event);
-		String name = event.toStringForFileName();
-		serialize(event, name);
+		saveOnServer(event);
 	}
 
 	// user actions
 	@Override
-	public void SignUp(ClientAccount newAccount) throws RemoteException {
+	public void SignUp(User newAccount) throws RemoteException {
 		usersList.add(newAccount);
-		String name = newAccount.toStringForFileName();
-		serialize(newAccount, name);
-
+		saveOnServer(newAccount);
 	}
 
 	@Override
-	public ClientAccount LogIn(String userName, String password) throws RemoteException {
+	public User LogIn(String email, String password) throws RemoteException {
 
-		ClientAccount readUser = usersList.stream().filter(
-				(u) -> userName.equals(u.getFirstName() + "_" + u.getLastName()) && password.equals(u.getPassword()))
+		User readUser = usersList.stream().filter((u) -> email.equals(u.getEmail()) && password.equals(u.getPassword()))
 				.findAny().orElse(null);
 		return readUser;
 
@@ -64,18 +59,23 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 	@Override
 	public void bookTheEvent(String userNick, int eventId, int ticketBooked) throws RemoteException {
 
-		// perform changes to event
+		// load user
 		Event event = eventsList.get(eventId);
+		String eventKey = event.getName() + "\n" + event.getPlace() + "\n" + event.getStringDate();
+		
+		// perform changes to even
 		event.add(userNick, ticketBooked);
-		String eventName = event.toStringForFileName();
-		serialize(event, eventName);
+		saveOnServer(event);
 
 		// perform changes to user
 		usersList.forEach(user -> {
 			if (userNick.equals(user.getFirstName() + "_" + user.getLastName())) {
-				user.add(eventsList.get(eventId), ticketBooked);
-				String name = user.toStringForFileName();
-				serialize(user, name);
+				user.add(eventKey, ticketBooked);
+				try {
+					saveOnServer(user);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		});
 
@@ -89,8 +89,12 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 		eventsList.forEach(event -> {
 			if (keyParts[0].equals(event.getName())) {
 				event.remove(userNick, ticketToReturn);
-				String name = event.toStringForFileName();
-				serialize(event, name);
+				try {
+					saveOnServer(event);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
 			}
 		});
 
@@ -98,14 +102,30 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 		usersList.forEach(user -> {
 			if (userNick.equals(user.getFirstName() + "_" + user.getLastName())) {
 				user.remove(eventKey);
-				String name = user.toStringForFileName();
-				serialize(user, name);
-
+				try {
+					saveOnServer(user);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		});
 	}
 
 	// general actions
+
+	@Override
+	public void saveOnServer(Object object) throws RemoteException {
+
+		if (object instanceof Event) {
+			String name = ((Event) object).toStringForFileName();
+			serialize(object, name);
+		} else if (object instanceof User) {
+			String name = ((User) object).toStringForFileName();
+			serialize(object, name);
+		}
+
+	}
+
 	@Override
 	public int getEventsNumber() throws RemoteException {
 		return eventsList.size();
@@ -166,11 +186,11 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 			try {
 				File[] files = new File(dir).listFiles();
 				for (File file : files) {
-					if (file.isFile() && (file.getName().endsWith(".afb") || file.getName().endsWith(".re"))) {
+					if (file.isFile() && (file.getName().endsWith(".me"))) {
 						Event readEvent = (Event) deserialize(file.getName());
 						eventsList.add(readEvent);
 					} else if (file.isFile() && (file.getName().endsWith(".usr"))) {
-						ClientAccount readUser = (ClientAccount) deserialize(file.getName());
+						User readUser = (User) deserialize(file.getName());
 						usersList.add(readUser);
 					}
 				}
