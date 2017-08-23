@@ -67,7 +67,7 @@ public class Client implements Runnable {
 						resignBooking();
 						break;
 					case "p":
-						showProfileOrUpdate();
+						//showProfileOrUpdate();
 						break;
 					case "d":
 						remoteObject.LogMessage(
@@ -221,7 +221,7 @@ public class Client implements Runnable {
 
 	}
 	// SHOW USER PROFILE WITH OPTIONAL UPDATE FUNCTION//
-
+	/*
 	private void showProfileOrUpdate() throws RemoteException {
 
 		while (true) {
@@ -275,6 +275,7 @@ public class Client implements Runnable {
 		}
 
 	}
+	*/
 
 	// LOGGING ACTIONS //
 

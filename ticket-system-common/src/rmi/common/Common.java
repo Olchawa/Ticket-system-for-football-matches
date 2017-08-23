@@ -18,8 +18,6 @@ public interface Common extends Remote {
 
 	void buyOrReturn(String userNick, int tickets, String eventKey, String action) throws RemoteException;
 
-	void updateUser(String oldFirstName, String oldLastName, String[] userDetails) throws RemoteException;
-
 	String checkIfUserExist(String firstName, String lastName, String email) throws RemoteException;
 
 	// general actions

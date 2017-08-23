@@ -125,61 +125,6 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 	}
 
 	@Override
-	public void updateUser(String oldFirstName, String oldLastName, String[] userDetails) throws RemoteException {
-
-		// perform changes to user
-		usersList.forEach(user -> {
-			if (user.getFirstName().equals(oldFirstName) && user.getLastName().equals(oldLastName)) {
-				try {
-					Path oldPath = Paths.get(dir + "\\" + user.toStringForFileName());
-					user.setFirstName(userDetails[0]);
-					user.setLastName(userDetails[1]);
-					user.setPassword(userDetails[2]);
-					user.setEmail(userDetails[3]);
-
-					// rename file if necessary
-					if (!oldFirstName.equals(userDetails[0]) || !oldLastName.equals(userDetails[1])
-							|| !user.getEmail().equals(userDetails[2])) {
-
-						Path newPath = Paths.get(dir + "\\" + user.toStringForFileName());
-
-						System.out.println(oldPath + "\n" + newPath);
-
-						try {
-							Files.move(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
-							Files.deleteIfExists(oldPath);
-							System.out.println("File was successfully renamed");
-							System.out.println(user.toString());
-
-						} catch (IOException e) {
-							e.printStackTrace();
-							System.out.println("Error: Unable to rename file");
-						}
-					}
-					saveOnServer(user);
-
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-
-		// update event information for users
-
-		eventsList.forEach(event -> {
-			if (event.hasKey(oldFirstName + "_" + oldLastName)) {
-				try {
-					event.updateEvents(oldFirstName + "_" + oldLastName, userDetails[0] + "_" + userDetails[1]);
-					saveOnServer(event);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-
-	}
-
-	@Override
 	public User LogIn(String email, String password) throws RemoteException {
 
 		User readUser = usersList.stream().filter((u) -> email.equals(u.getEmail()) && password.equals(u.getPassword()))
