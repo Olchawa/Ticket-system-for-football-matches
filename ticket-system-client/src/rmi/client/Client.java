@@ -67,7 +67,7 @@ public class Client implements Runnable {
 						resignBooking();
 						break;
 					case "p":
-						//showProfileOrUpdate();
+						// showProfileOrUpdate();
 						break;
 					case "d":
 						remoteObject.LogMessage(
@@ -92,8 +92,8 @@ public class Client implements Runnable {
 		while (true) {
 
 			String choosenOption;
-			System.out.println(separator  + "\n[b]uy tickets" + "\n[m]enu"
-					+ "\n sort by: [n]ame, [p]lace, [d]ate" + separator);
+			System.out.println(
+					separator + "\n[b]uy tickets" + "\n[m]enu" + "\n sort by: [n]ame, [p]lace, [d]ate" + separator);
 			System.out.println(remoteObject.showEvents(eventList, userFlag));
 
 			if (input.hasNextLine()) {
@@ -222,107 +222,88 @@ public class Client implements Runnable {
 	}
 	// SHOW USER PROFILE WITH OPTIONAL UPDATE FUNCTION//
 	/*
-	private void showProfileOrUpdate() throws RemoteException {
-
-		while (true) {
-
-			String choosenOption;
-			System.out.println(separator + "\n[s]how profile \n[u]pdate profile\n[b]ack ");
-
-			if (input.hasNextLine()) {
-				choosenOption = input.nextLine();
-				if (!choosenOption.matches("[sub]")) {
-					System.err.println("You entered invalid command!");
-					continue;
-				}
-				switch (choosenOption) {
-				case "s":
-					System.out.println(user.toString());
-					break;
-				case "u":
-					String[] userDetails = new String[4];
-					// set new properties
-					userDetails = setUser();
-
-					// check if there is any user with that properties
-					String action = remoteObject.checkIfUserExist(userDetails[0], userDetails[1], userDetails[2]);
-
-					if (action.equals("good")) {
-						// perform changes on server
-						remoteObject.updateUser(user.getFirstName(), user.getLastName(), userDetails);
-
-						// update locally
-						user.setFirstName(userDetails[0]);
-						user.setLastName(userDetails[1]);
-						user.setPassword(userDetails[2]);
-						user.setEmail(userDetails[3]);
-
-					} else if (action.equals("names")) {
-						System.out.println("Provided names are already used!!!");
-						user = null;
-						continue;
-					} else if (action.equals("email")) {
-						System.out.println("Provided email is already used!!!");
-						user = null;
-						continue;
-					}
-
-					break;
-				case "b":
-					return;
-				}
-			}
-		}
-
-	}
-	*/
+	 * private void showProfileOrUpdate() throws RemoteException {
+	 * 
+	 * while (true) {
+	 * 
+	 * String choosenOption; System.out.println(separator +
+	 * "\n[s]how profile \n[u]pdate profile\n[b]ack ");
+	 * 
+	 * if (input.hasNextLine()) { choosenOption = input.nextLine(); if
+	 * (!choosenOption.matches("[sub]")) { System.err.println(
+	 * "You entered invalid command!"); continue; } switch (choosenOption) {
+	 * case "s": System.out.println(user.toString()); break; case "u": String[]
+	 * userDetails = new String[4]; // set new properties userDetails =
+	 * setUser();
+	 * 
+	 * // check if there is any user with that properties String action =
+	 * remoteObject.checkIfUserExist(userDetails[0], userDetails[1],
+	 * userDetails[2]);
+	 * 
+	 * if (action.equals("good")) { // perform changes on server
+	 * remoteObject.updateUser(user.getFirstName(), user.getLastName(),
+	 * userDetails);
+	 * 
+	 * // update locally user.setFirstName(userDetails[0]);
+	 * user.setLastName(userDetails[1]); user.setPassword(userDetails[2]);
+	 * user.setEmail(userDetails[3]);
+	 * 
+	 * } else if (action.equals("names")) { System.out.println(
+	 * "Provided names are already used!!!"); user = null; continue; } else if
+	 * (action.equals("email")) { System.out.println(
+	 * "Provided email is already used!!!"); user = null; continue; }
+	 * 
+	 * break; case "b": return; } } }
+	 * 
+	 * }
+	 */
 
 	// LOGGING ACTIONS //
 
 	boolean accessToSystem() throws RemoteException {
 		String choosenOption;
 		while (true) {
-			System.out.println(
-					"\n- select [1] to log into system \n- select [2] to create new accout \n- select [3] to exit the TBS");
+			System.out.println("\n[l]og into system \n[c]reate new accout\n[e]xit the TSS systemS");
 			if (input.hasNextLine()) {
 				choosenOption = input.nextLine();
-				if (!choosenOption.matches("[123]")) {
+				if (!choosenOption.matches("[lce]")) {
 					System.err.println("You entered invalid command!");
 					continue;
 				}
 				switch (choosenOption) {
-				case "1":
-					Logging();
-					remoteObject
-							.LogMessage("User " + user.getFirstName() + "_" + user.getLastName() + " has logged in.");
-					System.out.println(separator + "\nWelcome " + user.getFirstName() + "!!!");
-					break;
+				case "l":
+					if (logging()) {
+						remoteObject.LogMessage(
+								"User " + user.getFirstName() + "_" + user.getLastName() + " has logged in.");
+						System.out.println(separator + "\nWelcome " + user.getFirstName() + "!!!");
+						break;
+					} else {
+						continue;
+					}
 
-				case "2":
+				case "c":
 					String[] userDetails = new String[4];
 					userDetails = setUser();
-					user = new User(userDetails[0], userDetails[1], userDetails[2], userDetails[3]);
 
 					// before sign up check if user already exists
 					String action = remoteObject.checkIfUserExist(userDetails[0], userDetails[1], userDetails[2]);
 
 					if (action.equals("good")) {
+						user = new User(userDetails[0], userDetails[1], userDetails[2], userDetails[3]);
 						remoteObject.SignUp(user);
 						remoteObject.LogMessage(
 								"New account created for user " + user.getFirstName() + "_" + user.getLastName() + ".");
 						System.out.println(separator + "\nWelcome " + userDetails[0] + "!!!");
 					} else if (action.equals("names")) {
 						System.out.println("Provided names are already used!!!");
-						user = null;
 						continue;
 					} else if (action.equals("email")) {
 						System.out.println("Provided email is already used!!!");
-						user = null;
 						continue;
 					}
 					break;
 
-				case "3":
+				case "e":
 					System.out.println("Thanks for using our system!!!");
 					return false;
 				}
@@ -341,7 +322,7 @@ public class Client implements Runnable {
 		return userDetails;
 	}
 
-	User Logging() throws RemoteException {
+	boolean logging() throws RemoteException {
 
 		while (true) {
 			String email = typeStringInput("Your email: ");
@@ -351,9 +332,9 @@ public class Client implements Runnable {
 			if (user == null) {
 				System.out.println(separator + "\nNo such user in the TBS database! \nPassword or email is incorrect!"
 						+ separator);
-				continue;
+				return false;
 			}
-			return user;
+			return true;
 		}
 	}
 
