@@ -8,6 +8,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.InputMismatchException;
+import java.util.List;
 import java.util.Scanner;
 import rmi.common.Common;
 import rmi.common.Event;
@@ -19,6 +20,7 @@ public class Admin implements Runnable {
 	private static Scanner input = new Scanner(System.in);
 	int adminTypeFlag = 1;
 	String separator = "\n=====================================";
+	List<Event> eventList = null;
 
 	public static void main(String[] args) throws IndexOutOfBoundsException {
 
@@ -39,7 +41,7 @@ public class Admin implements Runnable {
 
 				String choosenOption;
 				System.out.println(separator + "\nWhat you want to do? ");
-				System.out.println("[a]dd new event, [e]vents list showcase,\n[u]pdate the event, [d]isconnect: ");
+				System.out.println("[a]dd new event\n[e]vents list showcase\n[u]pdate the event\n[d]isconnect: ");
 
 				if (input.hasNextLine()) {
 					choosenOption = input.nextLine();
@@ -53,10 +55,12 @@ public class Admin implements Runnable {
 						remoteObject.addEvent(setEventDetails(event));
 						break;
 					case "e":
-						System.out.println(remoteObject.showEvents(adminTypeFlag));
+						eventList = remoteObject.getEvents();
+						showAllEvents();
 						break;
 					case "u":
-						performUpdate();
+						System.out.println(remoteObject.showEvents(eventList, adminTypeFlag));
+						performUpdate(eventList);
 						break;
 					case "d":
 						remoteObject.LogMessage("Admin has logged out.");
@@ -73,8 +77,43 @@ public class Admin implements Runnable {
 		}
 	}
 
-	private void performUpdate() throws RemoteException {
-		System.out.println(remoteObject.showEvents(adminTypeFlag));
+	private void showAllEvents() throws RemoteException {
+		while (true) {
+
+			String choosenOption;
+			System.out.println(separator + "\n[m]enu" + "\n sort by: [n]ame, [p]lace, [d]ate" + separator);
+			System.out.println(remoteObject.showEvents(eventList, adminTypeFlag));
+
+			if (input.hasNextLine()) {
+				choosenOption = input.nextLine();
+				if (!choosenOption.matches("[npdm]")) {
+					System.err.println("You entered invalid command!");
+					continue;
+				}
+				switch (choosenOption) {
+				case "b":
+					// booking(eventList);
+					return;
+				case "n":
+					System.out.println("sort by name");
+					eventList = remoteObject.sortEvents(remoteObject.getEvents(), "byName");
+					break;
+				case "p":
+					eventList = remoteObject.sortEvents(remoteObject.getEvents(), "byPlace");
+					break;
+				case "d":
+					eventList = remoteObject.sortEvents(remoteObject.getEvents(), "byDate");
+					break;
+				case "m":
+					return;
+				}
+			}
+		}
+
+	}
+
+	private void performUpdate(List<Event> list) throws RemoteException {
+		
 		int indexForUpdate = getIntegerInput(separator + "\nTo update select the correct [Match ID]: ");
 		// clear the buffer
 		input.nextLine();
@@ -83,7 +122,7 @@ public class Admin implements Runnable {
 			System.out.println(separator + "\nINVALID MATCH INDEX!!!");
 		} else {
 
-			Event selectedEvent = remoteObject.getEvent(indexForUpdate);
+			Event selectedEvent = list.get(indexForUpdate);
 			System.out.println(separator + "\nSelected event: \n" + selectedEvent.toString());
 
 			// copy old properties for future update
@@ -91,13 +130,12 @@ public class Admin implements Runnable {
 					selectedEvent.getTicketLeft());
 			// set new properties
 			Event updatedEvent = setEventDetails(selectedEvent);
-		
+
 			// save the update
 			remoteObject.updatEvent(oldEvent, updatedEvent);
 		}
 	}
 
-	// GOOD//
 	private Event setEventDetails(Event event) {
 		Event reEvent = event;
 		if (reEvent == null)

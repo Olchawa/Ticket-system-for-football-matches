@@ -12,6 +12,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import rmi.common.User;
@@ -53,7 +54,7 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 					event.setDate(updateEvent.getDate());
 					event.setTicketLeft(updateEvent.getTicketLeft());
 
-					saveOnServer(event);
+					System.out.println(event);
 
 					// rename file if necessary
 					if (!oldKey.equals(newKey)) {
@@ -70,6 +71,8 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 							e.printStackTrace();
 							System.out.println("Error: Unable to rename file");
 						}
+
+						saveOnServer(event);
 					}
 
 				} catch (Exception e) {
@@ -95,10 +98,85 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 	}
 
 	// user actions
+
+	@Override
+	public String checkIfUserExist(String firstName, String lastName, String email) throws RemoteException {
+		String action = "good";
+
+		for (User user : usersList) {
+
+			if (user.getEmail().equals(email)) {
+				action = "email";
+			}
+			if (user.getFirstName().equals(firstName) && user.getLastName().equals(lastName)) {
+				action = "names";
+			}
+
+		}
+		return action;
+	}
+
 	@Override
 	public void SignUp(User newAccount) throws RemoteException {
+
 		usersList.add(newAccount);
 		saveOnServer(newAccount);
+
+	}
+
+	@Override
+	public void updateUser(String oldFirstName, String oldLastName, String[] userDetails) throws RemoteException {
+
+		// perform changes to user
+		usersList.forEach(user -> {
+			if (user.getFirstName().equals(oldFirstName) && user.getLastName().equals(oldLastName)) {
+				try {
+					Path oldPath = Paths.get(dir + "\\" + user.toStringForFileName());
+					user.setFirstName(userDetails[0]);
+					user.setLastName(userDetails[1]);
+					user.setPassword(userDetails[2]);
+					user.setEmail(userDetails[3]);
+
+					// rename file if necessary
+					if (!oldFirstName.equals(userDetails[0]) || !oldLastName.equals(userDetails[1])
+							|| !user.getEmail().equals(userDetails[2])) {
+
+						Path newPath = Paths.get(dir + "\\" + user.toStringForFileName());
+
+						System.out.println(oldPath + "\n" + newPath);
+
+						try {
+							Files.move(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
+							Files.deleteIfExists(oldPath);
+							System.out.println("File was successfully renamed");
+							System.out.println(user.toString());
+
+						} catch (IOException e) {
+							e.printStackTrace();
+							System.out.println("Error: Unable to rename file");
+						}
+					}
+					saveOnServer(user);
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+
+		// update event information for users
+
+		eventsList.forEach(event -> {
+			if (event.hasKey(oldFirstName + "_" + oldLastName)) {
+				try {
+					event.updateEvents(oldFirstName + "_" + oldLastName, userDetails[0] + "_" + userDetails[1]);
+					saveOnServer(event);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+
 	}
 
 	@Override
@@ -160,19 +238,33 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 	}
 
 	@Override
-	public Event getEvent(int indexOfEvent) throws RemoteException {
-
-		Event selectedEvent = eventsList.get(indexOfEvent);
-		return selectedEvent;
+	public List<Event> getEvents() throws RemoteException {
+		return eventsList;
 	}
 
 	@Override
-	public String showEvents(int userTypeFlag) throws RemoteException {
+	public List<Event> sortEvents(List<Event> list, String sortType) throws RemoteException {
+
+		List<Event> listToSort = list;
+
+		if (sortType.equals("byName")) {
+			listToSort.sort((e1, e2) -> e1.getName().compareTo(e2.getName()));
+		} else if (sortType.equals("byPlace")) {
+			listToSort.sort((e1, e2) -> e1.getPlace().compareTo(e2.getPlace()));
+		} else if (sortType.equals("byDate")) {
+			listToSort.sort((e1, e2) -> e1.getDate().compareTo(e2.getDate()));
+		}
+
+		return listToSort;
+	}
+
+	@Override
+	public String showEvents(List<Event> list, int userTypeFlag) throws RemoteException {
 		StringBuilder listShowCase = new StringBuilder();
 		int matchId = 0;
 
 		// userTypeFlag: 1 - Administrator, 0 - Client
-		for (Event e : eventsList) {
+		for (Event e : list) {
 
 			listShowCase.append("\n=====================================");
 			if (e.getTicketLeft() == 0 && userTypeFlag == 0) {
@@ -181,8 +273,10 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 
 			} else {
 				listShowCase.append("\nMatch ID: " + matchId).append("\nName: " + e.getName())
-						.append("\nPlace: " + e.getPlace()).append("\nDate: " + e.getDate())
-						.append("\nQuantity of tickets you can buy: " + e.getTicketLeft());
+						.append("\nPlace: " + e.getPlace()).append("\nDate: " + e.getDate());
+				if (userTypeFlag == 0) {
+					listShowCase.append("\nMax tickets you can buy: " + e.getTicketLeft());
+				}
 				if (userTypeFlag == 1) {
 					listShowCase.append("\nNumber of participants: " + e.getTicketBooked())
 							.append("\nParticipants: " + e.showParticipants());

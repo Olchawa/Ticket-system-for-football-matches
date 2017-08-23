@@ -97,10 +97,14 @@ public class User implements Serializable {
 		this.email = email;
 	}
 
+	
+	public String infoForAdmin() {
+		return " firstName = " + firstName + "\n lastName = " + lastName + "\n email = " + email;
+	}
 	@Override
 	public String toString() {
-		return "User [firstName=" + firstName + ", lastName=" + lastName + ", password=" + password + ", email=" + email
-				+ ", events=" + events + "]";
+		return " firstName = " + firstName + "\n lastName = " + lastName + "\n password = *******" + "\n email = "
+				+ email;
 	}
 
 	public String toStringForFileName() {

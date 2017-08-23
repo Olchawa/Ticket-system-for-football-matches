@@ -30,37 +30,19 @@ public class Event implements Serializable {
 		this.ticketBooked = 0;
 	}
 
-	public LinkedHashMap<String, Integer> getParticipants() {
-		return participants;
-	}
-
-	public String showParticipants() {
-
-		StringBuilder listShowCase = new StringBuilder();
-		if (participants != null && !participants.isEmpty()) {
-			for (Entry<String, Integer> person : participants.entrySet()) {
-				listShowCase.append("\n " + person.getKey() + "  -  tickets : " + person.getValue());
-
-			}
-
-		}
-		return listShowCase.toString();
-	}
-
-	public void setParticipants(LinkedHashMap<String, Integer> participants) {
-		this.participants = participants;
-	}
+	// functions for updating
 
 	public void add(String name, int ticket) {
 
 		if (participants == null) {
 			participants = new LinkedHashMap<>();
 		}
-		participants.put(name, ticket);
-		if (ticketLeft > 0) {
-			ticketLeft -= ticket;
-			ticketBooked += ticket;
-		}
+		participants.computeIfPresent(name, (k, v) -> v + ticket);
+		participants.putIfAbsent(name, ticket);
+		
+		ticketLeft -= ticket;
+		ticketBooked += ticket;
+
 	}
 
 	public void remove(String key, int ticket) {
@@ -71,6 +53,26 @@ public class Event implements Serializable {
 		ticketLeft += ticket;
 		ticketBooked -= ticket;
 
+	}
+
+	public boolean hasKey(String userKey) {
+		return participants.containsKey(userKey);
+	}
+
+	public void updateEvents(String oldKey, String newKey) {
+		int value = participants.remove(oldKey);
+		participants.put(newKey, value);
+
+	}
+
+	// setters and getters
+
+	public LinkedHashMap<String, Integer> getParticipants() {
+		return participants;
+	}
+
+	public void setParticipants(LinkedHashMap<String, Integer> participants) {
+		this.participants = participants;
 	}
 
 	public String getName() {
@@ -111,6 +113,19 @@ public class Event implements Serializable {
 
 	public void setTicketBooked(int ticketBooked) {
 		this.ticketBooked = ticketBooked;
+	}
+
+	public String showParticipants() {
+
+		StringBuilder listShowCase = new StringBuilder();
+		if (participants != null && !participants.isEmpty()) {
+			for (Entry<String, Integer> person : participants.entrySet()) {
+				listShowCase.append("\n " + person.getKey() + "  -  tickets : " + person.getValue());
+
+			}
+
+		}
+		return listShowCase.toString();
 	}
 
 	public String getStringDate() {

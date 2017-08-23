@@ -2,6 +2,7 @@ package rmi.common;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.List;
 
 public interface Common extends Remote {
 
@@ -17,12 +18,18 @@ public interface Common extends Remote {
 
 	void buyOrReturn(String userNick, int tickets, String eventKey, String action) throws RemoteException;
 
+	void updateUser(String oldFirstName, String oldLastName, String[] userDetails) throws RemoteException;
+
+	String checkIfUserExist(String firstName, String lastName, String email) throws RemoteException;
+
 	// general actions
 	void saveOnServer(Object object) throws RemoteException;
 
-	String showEvents(int userTypeFlag) throws RemoteException;
+	String showEvents(List<Event> list, int userTypeFlag) throws RemoteException;
 
-	Event getEvent(int indexOfEvent) throws RemoteException;
+	List<Event> getEvents() throws RemoteException;
+
+	List<Event> sortEvents(List<Event> list, String sortType) throws RemoteException;
 
 	void LogMessage(String userName) throws RemoteException;
 
