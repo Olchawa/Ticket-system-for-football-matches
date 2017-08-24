@@ -53,9 +53,7 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 					event.setPlace(updateEvent.getPlace());
 					event.setDate(updateEvent.getDate());
 					event.setTicketLeft(updateEvent.getTicketLeft());
-
-					System.out.println(event);
-
+					
 					// rename file if necessary
 					if (!oldKey.equals(newKey)) {
 
@@ -65,13 +63,11 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 						try {
 							Files.move(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
 							Files.deleteIfExists(oldPath);
-							System.out.println("File was successfully renamed");
 
 						} catch (IOException e) {
 							e.printStackTrace();
-							System.out.println("Error: Unable to rename file");
+							System.out.println("Error: Unable to rename file: " +oldPath);
 						}
-
 						saveOnServer(event);
 					}
 
@@ -83,7 +79,6 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 		});
 
 		// update event information for users
-
 		usersList.forEach(user -> {
 			if (user.hasKey(oldKey)) {
 				try {
@@ -98,22 +93,10 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 	}
 
 	// user actions
-
 	@Override
-	public String checkIfUserExist(String firstName, String lastName, String email) throws RemoteException {
-		String action = "good";
-
-		for (User user : usersList) {
-
-			if (user.getEmail().equals(email)) {
-				action = "email";
-			}
-			if (user.getFirstName().equals(firstName) && user.getLastName().equals(lastName)) {
-				action = "names";
-			}
-
-		}
-		return action;
+	public boolean checkIfEmailExist(String email) throws RemoteException {
+		// return usersList.stream().anyMatch(e->e.getEmail().equals(email));
+		return usersList.stream().map(User::getEmail).anyMatch(email::equals);
 	}
 
 	@Override
@@ -155,7 +138,7 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 
 		// perform changes to user
 		usersList.forEach(user -> {
-			if (userNick.equals(user.getFirstName() + "_" + user.getLastName())) {
+			if (userNick.equals(user.getFirstName() + "_" + user.getLastName() + "_" + user.getEmail())) {
 				if (action.equals("buy"))
 					user.add(eventKey, tickets);
 				else if (action.equals("return"))
@@ -192,14 +175,18 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 
 		List<Event> listToSort = list;
 
-		if (sortType.equals("byName")) {
+		switch (sortType) {
+		case "byName":
 			listToSort.sort((e1, e2) -> e1.getName().compareTo(e2.getName()));
-		} else if (sortType.equals("byPlace")) {
+			break;
+		case "byPlace":
 			listToSort.sort((e1, e2) -> e1.getPlace().compareTo(e2.getPlace()));
-		} else if (sortType.equals("byDate")) {
+			break;
+		case "byDate":
 			listToSort.sort((e1, e2) -> e1.getDate().compareTo(e2.getDate()));
-		}
+			break;
 
+		}
 		return listToSort;
 	}
 
@@ -211,20 +198,18 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 		// userTypeFlag: 1 - Administrator, 0 - Client
 		for (Event e : list) {
 
-			listShowCase.append("\n=====================================");
+			
 			if (e.getTicketLeft() == 0 && userTypeFlag == 0) {
-				listShowCase.append("\nTICKETS HAVE BEEN SOLD OUT!!!!").append("\nName: " + e.getName())
-						.append("\nPlace: " + e.getPlace()).append("\nDate: " + e.getDate());
+				listShowCase.append("\nTICKETS HAVE BEEN SOLD OUT!!!!").append(", NAME: " + e.getName())
+						.append(", PLACE: " + e.getPlace()).append(", DATE: " + e.getDate());
 
 			} else {
-				listShowCase.append("\nMatch ID: " + matchId).append("\nName: " + e.getName())
-						.append("\nPlace: " + e.getPlace()).append("\nDate: " + e.getDate());
-				if (userTypeFlag == 0) {
-					listShowCase.append("\nMax tickets you can buy: " + e.getTicketLeft());
-				}
+				listShowCase.append("\n[" + matchId + "]").append(" NAME: " + e.getName())
+						.append(", PLACE: " + e.getPlace()).append(", DATE: " + e.getDate());
 				if (userTypeFlag == 1) {
-					listShowCase.append("\nNumber of participants: " + e.getTicketBooked())
-							.append("\nParticipants: " + e.showParticipants());
+					listShowCase.append(", TICKET LEFT: " + e.getTicketLeft());
+					listShowCase.append(", PARTICIPANTS: " + e.getTicketBooked());
+							
 				}
 			}
 			matchId++;

@@ -18,7 +18,7 @@ public interface Common extends Remote {
 
 	void buyOrReturn(String userNick, int tickets, String eventKey, String action) throws RemoteException;
 
-	String checkIfUserExist(String firstName, String lastName, String email) throws RemoteException;
+	boolean checkIfEmailExist(String email) throws RemoteException;
 
 	// general actions
 	void saveOnServer(Object object) throws RemoteException;
