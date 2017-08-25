@@ -51,7 +51,7 @@ public class Client implements Runnable {
 						+ "\n[b]uy tickets\n[s]how your matches\n[r]eturn tickets\n[p]rofile info\n[d]isconnect: ");
 
 				if (input.hasNextLine()) {
-					choosenOption = input.nextLine();
+					choosenOption = input.nextLine().toLowerCase();
 					if (!choosenOption.matches("[bsrpd]")) {
 						System.err.println("You entered invalid command!");
 						continue;
@@ -64,7 +64,7 @@ public class Client implements Runnable {
 						showUserEvents(user);
 						break;
 					case "r":
-						resignBooking();
+						returnTickets();
 						break;
 					case "p":
 						System.out.println(user.toString());
@@ -87,7 +87,7 @@ public class Client implements Runnable {
 	}
 
 	private void showAllEvents() throws RemoteException {
-		// first loading of the list
+		
 		List<Event> eventList = remoteObject.getEvents();
 		while (true) {
 
@@ -97,7 +97,7 @@ public class Client implements Runnable {
 					separator + "\n sort by: [n]ame, [p]lace, [d]ate\n tickets [b]uy\n back to [m]enu" + separator);
 
 			if (input.hasNextLine()) {
-				choosenOption = input.nextLine();
+				choosenOption = input.nextLine().toLowerCase();
 				if (!choosenOption.matches("[bnpdm]")) {
 					System.err.println("You entered invalid command!");
 					continue;
@@ -107,13 +107,9 @@ public class Client implements Runnable {
 					booking(eventList);
 					return;
 				case "n":
-					eventList = remoteObject.sortEvents(remoteObject.getEvents(), "byName");
-					break;
 				case "p":
-					eventList = remoteObject.sortEvents(remoteObject.getEvents(), "byPlace");
-					break;
 				case "d":
-					eventList = remoteObject.sortEvents(remoteObject.getEvents(), "byDate");
+					eventList = remoteObject.sortEvents(remoteObject.getEvents(), choosenOption);
 					break;
 				case "m":
 					return;
@@ -123,7 +119,6 @@ public class Client implements Runnable {
 
 	}
 
-	// BOOKING//
 	private void booking(List<Event> list) throws RemoteException {
 
 		int eventID = InputValidation.getIntegerInput(separator + "\nSelect the [ID]: \n ");
@@ -158,9 +153,7 @@ public class Client implements Runnable {
 
 	}
 
-	// RETURN TICKETS//
-
-	private void resignBooking() throws RemoteException {
+	private void returnTickets() throws RemoteException {
 
 		LinkedHashMap<String, Integer> clientEvents = user.getEvents();
 
@@ -198,8 +191,6 @@ public class Client implements Runnable {
 
 	}
 
-	// SHOW USER EVENTS//
-
 	private void showUserEvents(User client) {
 
 		LinkedHashMap<String, Integer> clientEvents = client.getEvents();
@@ -218,8 +209,8 @@ public class Client implements Runnable {
 			System.out.println(separator + "\nYou have no tickets bought.");
 
 	}
-	// LOGGING ACTIONS //
 
+	
 	boolean accessToSystem() throws RemoteException {
 		String choosenOption;
 		while (true) {
@@ -243,7 +234,7 @@ public class Client implements Runnable {
 
 				case "c":
 					String[] userDetails = new String[4];
-					userDetails = setUser();
+					userDetails = setUserDetails();
 
 					// before sign up check if user already exists
 					remoteObject.checkIfEmailExist(userDetails[3]);
@@ -269,7 +260,7 @@ public class Client implements Runnable {
 		}
 	}
 
-	private String[] setUser() {
+	private String[] setUserDetails() {
 
 		String[] userDetails = new String[4];
 		userDetails[0] = InputValidation.getStringInput("Your first name: ");

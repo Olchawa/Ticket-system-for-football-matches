@@ -53,7 +53,7 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 					event.setPlace(updateEvent.getPlace());
 					event.setDate(updateEvent.getDate());
 					event.setTicketLeft(updateEvent.getTicketLeft());
-					
+
 					// rename file if necessary
 					if (!oldKey.equals(newKey)) {
 
@@ -66,7 +66,7 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 
 						} catch (IOException e) {
 							e.printStackTrace();
-							System.out.println("Error: Unable to rename file: " +oldPath);
+							System.out.println("Error: Unable to rename file: " + oldPath);
 						}
 						saveOnServer(event);
 					}
@@ -176,13 +176,13 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 		List<Event> listToSort = list;
 
 		switch (sortType) {
-		case "byName":
+		case "n":
 			listToSort.sort((e1, e2) -> e1.getName().compareTo(e2.getName()));
 			break;
-		case "byPlace":
+		case "p":
 			listToSort.sort((e1, e2) -> e1.getPlace().compareTo(e2.getPlace()));
 			break;
-		case "byDate":
+		case "d":
 			listToSort.sort((e1, e2) -> e1.getDate().compareTo(e2.getDate()));
 			break;
 
@@ -198,7 +198,6 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 		// userTypeFlag: 1 - Administrator, 0 - Client
 		for (Event e : list) {
 
-			
 			if (e.getTicketLeft() == 0 && userTypeFlag == 0) {
 				listShowCase.append("\nTICKETS HAVE BEEN SOLD OUT!!!!").append(", NAME: " + e.getName())
 						.append(", PLACE: " + e.getPlace()).append(", DATE: " + e.getDate());
@@ -209,7 +208,7 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 				if (userTypeFlag == 1) {
 					listShowCase.append(", TICKET LEFT: " + e.getTicketLeft());
 					listShowCase.append(", PARTICIPANTS: " + e.getTicketBooked());
-							
+
 				}
 			}
 			matchId++;

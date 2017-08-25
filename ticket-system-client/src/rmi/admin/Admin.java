@@ -41,7 +41,7 @@ public class Admin implements Runnable {
 				System.out.println("[a]dd new event\n[e]vents list showcase\n[d]isconnect: ");
 
 				if (input.hasNextLine()) {
-					choosenOption = input.nextLine();
+					choosenOption = input.nextLine().toLowerCase();
 					if (!choosenOption.matches("[aed]")) {
 						System.err.println("You entered invalid command!");
 						continue;
@@ -79,20 +79,16 @@ public class Admin implements Runnable {
 			System.out.println(
 					separator + "\n sort by: [n]ame, [p]lace, [d]ate\n event [s]elect\n back to [m]enu" + separator);
 			if (input.hasNextLine()) {
-				choosenOption = input.nextLine();
+				choosenOption = input.nextLine().toLowerCase();
 				if (!choosenOption.matches("[npdsm]")) {
 					System.err.println("You entered invalid command!");
 					continue;
 				}
 				switch (choosenOption) {
 				case "n":
-					eventList = remoteObject.sortEvents(remoteObject.getEvents(), "byName");
-					break;
 				case "p":
-					eventList = remoteObject.sortEvents(remoteObject.getEvents(), "byPlace");
-					break;
 				case "d":
-					eventList = remoteObject.sortEvents(remoteObject.getEvents(), "byDate");
+					eventList = remoteObject.sortEvents(remoteObject.getEvents(), choosenOption);
 					break;
 				case "s":
 					selectEvent();
@@ -107,7 +103,7 @@ public class Admin implements Runnable {
 
 	private void selectEvent() throws RemoteException {
 		int indexForUpdate = InputValidation.getIntegerInput(separator + "\nSelect the [ID]: ");
-		
+
 		if (indexForUpdate >= remoteObject.getEventsNumber()) {
 			System.out.println(separator + "\nINVALID INDEX!!!");
 		} else {
@@ -119,14 +115,14 @@ public class Admin implements Runnable {
 				System.out.println(separator + "\nSelected event: \n" + selectedEvent.toString());
 				System.out.println(separator + "\n [s]how participants\n [u]pdate event info\n [m]enu" + separator);
 				if (input.hasNextLine()) {
-					choosenOption = input.nextLine();
+					choosenOption = input.nextLine().toLowerCase();
 					if (!choosenOption.matches("[sum]")) {
 						System.err.println("You entered invalid command!");
 						continue;
 					}
 					switch (choosenOption) {
 					case "s":
-						System.out.println("Participants: "+selectedEvent.showParticipants());
+						System.out.println("Participants: " + selectedEvent.showParticipants());
 						break;
 					case "u":
 						// copy old properties for future update
@@ -152,7 +148,7 @@ public class Admin implements Runnable {
 		Event reEvent = event;
 		if (reEvent == null)
 			reEvent = new Event(null, null, null, 0);
-		// user input
+
 		System.out.println("\nSet properties: " + separator);
 		reEvent.setName(InputValidation.getStringInput("Event name: "));
 		reEvent.setPlace(InputValidation.getStringInput("Event place: "));
