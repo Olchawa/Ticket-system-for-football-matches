@@ -16,7 +16,8 @@ public class Event implements Serializable {
 	private int ticketBooked;
 
 	LinkedHashMap<String, Integer> participants;
-
+	
+	// constructors
 	public Event() {
 
 	}
@@ -31,7 +32,6 @@ public class Event implements Serializable {
 	}
 
 	// functions for updating
-
 	public void add(String name, int ticket) {
 
 		if (participants == null) {
@@ -66,7 +66,6 @@ public class Event implements Serializable {
 	}
 
 	// setters and getters
-
 	public LinkedHashMap<String, Integer> getParticipants() {
 		return participants;
 	}
@@ -135,8 +134,8 @@ public class Event implements Serializable {
 
 	@Override
 	public String toString() {
-		return " name = " + name + ",\n place = " + place + ",\n date = " + date + ",\n ticketLeft = " + ticketLeft
-				+ ",\n ticketBooked = " + ticketBooked;
+		return " NAME: " + name + ",\n PLACE: " + place + ",\n DATE: " + date + ",\n TICKETS: LEFT - " + ticketLeft
+				+ ", BOOKED - " + ticketBooked;
 	}
 
 	public String toStringForFileName() {

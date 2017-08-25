@@ -5,7 +5,6 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
-import java.util.InputMismatchException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -14,6 +13,7 @@ import java.util.Scanner;
 import rmi.common.User;
 import rmi.common.Common;
 import rmi.common.Event;
+import rmi.common.InputValidation;
 
 public class Client implements Runnable {
 
@@ -51,7 +51,7 @@ public class Client implements Runnable {
 						+ "\n[b]uy tickets\n[s]how your matches\n[r]eturn tickets\n[p]rofile info\n[d]isconnect: ");
 
 				if (input.hasNextLine()) {
-					choosenOption = input.nextLine();
+					choosenOption = input.nextLine().toLowerCase();
 					if (!choosenOption.matches("[bsrpd]")) {
 						System.err.println("You entered invalid command!");
 						continue;
@@ -64,10 +64,10 @@ public class Client implements Runnable {
 						showUserEvents(user);
 						break;
 					case "r":
-						resignBooking();
+						returnTickets();
 						break;
 					case "p":
-						showProfileOrUpdate();
+						System.out.println(user.toString());
 						break;
 					case "d":
 						remoteObject.LogMessage(
@@ -87,17 +87,17 @@ public class Client implements Runnable {
 	}
 
 	private void showAllEvents() throws RemoteException {
-		// first loading of the list
+		
 		List<Event> eventList = remoteObject.getEvents();
 		while (true) {
 
 			String choosenOption;
-			System.out.println(
-					separator + "\n[b]uy tickets" + "\n[m]enu" + "\n sort by: [n]ame, [p]lace, [d]ate" + separator);
 			System.out.println(remoteObject.showEvents(eventList, userFlag));
+			System.out.println(
+					separator + "\n sort by: [n]ame, [p]lace, [d]ate\n tickets [b]uy\n back to [m]enu" + separator);
 
 			if (input.hasNextLine()) {
-				choosenOption = input.nextLine();
+				choosenOption = input.nextLine().toLowerCase();
 				if (!choosenOption.matches("[bnpdm]")) {
 					System.err.println("You entered invalid command!");
 					continue;
@@ -107,13 +107,9 @@ public class Client implements Runnable {
 					booking(eventList);
 					return;
 				case "n":
-					eventList = remoteObject.sortEvents(remoteObject.getEvents(), "byName");
-					break;
 				case "p":
-					eventList = remoteObject.sortEvents(remoteObject.getEvents(), "byPlace");
-					break;
 				case "d":
-					eventList = remoteObject.sortEvents(remoteObject.getEvents(), "byDate");
+					eventList = remoteObject.sortEvents(remoteObject.getEvents(), choosenOption);
 					break;
 				case "m":
 					return;
@@ -123,25 +119,27 @@ public class Client implements Runnable {
 
 	}
 
-	// BOOKING//
 	private void booking(List<Event> list) throws RemoteException {
 
-		int eventID = getIntegerInput(separator + "\nSelect the [Match ID]: \n ");
-		input.nextLine();
+		int eventID = InputValidation.getIntegerInput(separator + "\nSelect the [ID]: \n ");
 
 		if (eventID >= remoteObject.getEventsNumber()) {
 			System.out.println(separator + "\nINVALID MATCH INDEX!!!");
 		} else {
-			int ticketBooked = getIntegerInput(separator + "\nHow many tickets: \n ");
-			input.nextLine();
+
+			int ticketBooked = InputValidation.getIntegerInput(separator + "\nHow many tickets: \n ");
+
 			Event tempEvent = list.get(eventID);
 			if (tempEvent.getTicketLeft() >= ticketBooked) {
 
-				// add event to user
 				String eventKey = tempEvent.getName() + "\n" + tempEvent.getPlace() + "\n" + tempEvent.getStringDate();
-				user.add(eventKey, ticketBooked);
+
 				// perform changes on server
-				remoteObject.buyOrReturn(user.getFirstName() + "_" + user.getLastName(), ticketBooked, eventKey, "buy");
+				remoteObject.buyOrReturn(user.getFirstName() + "_" + user.getLastName() + "_" + user.getEmail(),
+						ticketBooked, eventKey, "buy");
+
+				// add event to user
+				user.add(eventKey, ticketBooked);
 
 			} else if (tempEvent.getTicketLeft() == 0) {
 				System.out.println(separator + "\nTICKETS FOR THIS MATCH HAVE BEEN SOLD OUT!!!!");
@@ -155,17 +153,14 @@ public class Client implements Runnable {
 
 	}
 
-	// RETURN TICKETS//
-
-	private void resignBooking() throws RemoteException {
+	private void returnTickets() throws RemoteException {
 
 		LinkedHashMap<String, Integer> clientEvents = user.getEvents();
 
 		if (clientEvents != null && !clientEvents.isEmpty()) {
 
 			showUserEvents(user);
-			int eventID = getIntegerInput(separator + "\nSelect the [Match ID]: \n ");
-			input.nextLine();
+			int eventID = InputValidation.getIntegerInput(separator + "\nSelect the [ID]: \n ");
 
 			// temporary lists to store events keys
 			List<String> keyList = new ArrayList<String>();
@@ -181,8 +176,8 @@ public class Client implements Runnable {
 				ticketToRemove = clientEvents.get(keyToRemove);
 
 				// perform changes on server
-				remoteObject.buyOrReturn(user.getFirstName() + "_" + user.getLastName(), ticketToRemove, keyToRemove,
-						"return");
+				remoteObject.buyOrReturn(user.getFirstName() + "_" + user.getLastName() + "_" + user.getEmail(),
+						ticketToRemove, keyToRemove, "return");
 				// update locally
 				user.remove(keyToRemove);
 
@@ -196,17 +191,17 @@ public class Client implements Runnable {
 
 	}
 
-	// SHOW USER EVENTS//
-
 	private void showUserEvents(User client) {
 
 		LinkedHashMap<String, Integer> clientEvents = client.getEvents();
 
 		if (clientEvents != null && !clientEvents.isEmpty()) {
 			int i = 0;
+			System.out.println(separator);
 			for (Entry<String, Integer> event : clientEvents.entrySet()) {
-				System.out.println(separator + "\n[Match ID]: " + i + "\n" + event.getKey() + "\nYour tickets : "
-						+ event.getValue());
+				String[] keyParts = event.getKey().split("\n");
+				System.out.println("\n[" + i + "]:" + " NAME: " + keyParts[0] + ", PLACE: " + keyParts[1] + ", DATE: "
+						+ keyParts[2] + ", YOUR TICKETS: " + event.getValue());
 				i++;
 			}
 
@@ -214,67 +209,14 @@ public class Client implements Runnable {
 			System.out.println(separator + "\nYou have no tickets bought.");
 
 	}
-	// SHOW USER PROFILE WITH OPTIONAL UPDATE FUNCTION//
 
-	private void showProfileOrUpdate() throws RemoteException {
-
-		while (true) {
-
-			String choosenOption;
-			System.out.println(separator + "\n[s]how profile \n[u]pdate profile\n[b]ack ");
-
-			if (input.hasNextLine()) {
-				choosenOption = input.nextLine();
-				if (!choosenOption.matches("[sub]")) {
-					System.err.println("You entered invalid command!");
-					continue;
-				}
-				switch (choosenOption) {
-				case "s":
-					System.out.println(user.toString());
-					break;
-				case "u":
-
-					String[] userDetails = new String[4];
-					// set new properties
-					userDetails = setUser();
-
-					// check if there is any user with that properties
-					String action = remoteObject.checkIfUserExist(userDetails[0], userDetails[1], userDetails[2]);
-
-					if (action.equals("good")) {
-						// perform changes on server
-						remoteObject.updateUser(user.getFirstName(), user.getLastName(), userDetails);
-						// update locally
-						user.setFirstName(userDetails[0]);
-						user.setLastName(userDetails[1]);
-						user.setPassword(userDetails[2]);
-						user.setEmail(userDetails[3]);
-
-					} else if (action.equals("names")) {
-						System.out.println("Provided names are already used!!!");
-						continue;
-					} else if (action.equals("email")) {
-						System.out.println("Provided email is already used!!!");
-						continue;
-					}
-					break;
-				case "b":
-					return;
-				}
-			}
-		}
-
-	}
-
-	// LOGGING ACTIONS //
-
+	
 	boolean accessToSystem() throws RemoteException {
 		String choosenOption;
 		while (true) {
-			System.out.println("\n[l]og into system \n[c]reate new accout\n[e]xit the TSS system");
+			System.out.println("\n[l]og into system \n[c]reate new accout\n[e]xit the TSS systemS");
 			if (input.hasNextLine()) {
-				choosenOption = input.nextLine();
+				choosenOption = input.nextLine().toLowerCase();
 				if (!choosenOption.matches("[lce]")) {
 					System.err.println("You entered invalid command!");
 					continue;
@@ -292,26 +234,24 @@ public class Client implements Runnable {
 
 				case "c":
 					String[] userDetails = new String[4];
-					userDetails = setUser();
-					// check if user already exists
-					String action = remoteObject.checkIfUserExist(userDetails[0], userDetails[1], userDetails[2]);
+					userDetails = setUserDetails();
 
-					if (action.equals("good")) {
-						remoteObject.SignUp(user);
+					// before sign up check if user already exists
+					remoteObject.checkIfEmailExist(userDetails[3]);
+
+					if (!remoteObject.checkIfEmailExist(userDetails[3])) {
 						user = new User(userDetails[0], userDetails[1], userDetails[2], userDetails[3]);
+						remoteObject.SignUp(user);
 						remoteObject.LogMessage(
 								"New account created for user " + user.getFirstName() + "_" + user.getLastName() + ".");
 						System.out.println(separator + "\nWelcome " + userDetails[0] + "!!!");
-					} else if (action.equals("names")) {
-						System.out.println("Provided names are already used!!!");
-						continue;
-					} else if (action.equals("email")) {
-						System.out.println("Provided email is already used!!!");
+					} else {
+						System.out.println("This email is already used!!!");
 						continue;
 					}
 					break;
 
-				case "n":
+				case "e":
 					System.out.println("Thanks for using our system!!!");
 					return false;
 				}
@@ -320,11 +260,21 @@ public class Client implements Runnable {
 		}
 	}
 
+	private String[] setUserDetails() {
+
+		String[] userDetails = new String[4];
+		userDetails[0] = InputValidation.getStringInput("Your first name: ");
+		userDetails[1] = InputValidation.getStringInput("Your last name: ");
+		userDetails[2] = InputValidation.getStringInput("Your password: ");
+		userDetails[3] = InputValidation.getStringInput("Your email: ");
+		return userDetails;
+	}
+
 	boolean logging() throws RemoteException {
 
 		while (true) {
-			String email = typeStringInput("Your email: ");
-			String password = typeStringInput("Your password: ");
+			String email = InputValidation.getStringInput("Your email: ");
+			String password = InputValidation.getStringInput("Your password: ");
 			user = remoteObject.LogIn(email, password);
 
 			if (user == null) {
@@ -333,35 +283,6 @@ public class Client implements Runnable {
 			}
 			return true;
 		}
-	}
-
-	private String[] setUser() {
-
-		String[] userDetails = new String[4];
-		userDetails[0] = typeStringInput("Your first name: ");
-		userDetails[1] = typeStringInput("Your last name: ");
-		userDetails[2] = typeStringInput("Your password: ");
-		userDetails[3] = typeStringInput("Your email: ");
-		return userDetails;
-	}
-
-	String typeStringInput(String inputInfo) {
-		System.out.println(inputInfo);
-		return input.nextLine();
-	}
-
-	public static int getIntegerInput(String prompt) {
-		int value = -1;
-		while (value < 0) {
-			try {
-				System.out.print(prompt);
-				value = input.nextInt();
-			} catch (InputMismatchException ime) {
-				System.err.println("Incorrect entry. Please input only a positive integer.");
-				input.nextLine();
-			}
-		}
-		return value;
 	}
 
 }

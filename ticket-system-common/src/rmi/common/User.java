@@ -14,8 +14,7 @@ public class User implements Serializable {
 
 	LinkedHashMap<String, Integer> events;
 
-	// constructor
-
+	// constructors
 	public User() {
 
 	}
@@ -28,7 +27,7 @@ public class User implements Serializable {
 		this.email = email;
 	}
 
-	// functions for updating client events
+	// functions for updating
 	public void add(String key, int ticketsBooked) {
 
 		if (events == null) {
@@ -97,14 +96,9 @@ public class User implements Serializable {
 		this.email = email;
 	}
 
-	
-	public String infoForAdmin() {
-		return " firstName = " + firstName + "\n lastName = " + lastName + "\n email = " + email;
-	}
 	@Override
 	public String toString() {
-		return " firstName = " + firstName + "\n lastName = " + lastName + "\n password = *******" + "\n email = "
-				+ email;
+		return " First name: " + firstName + "\n Last name: " + lastName + "\n Email: " + email;
 	}
 
 	public String toStringForFileName() {
