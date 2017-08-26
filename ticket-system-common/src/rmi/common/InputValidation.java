@@ -16,6 +16,7 @@ public class InputValidation {
 			try {
 				System.out.print(prompt);
 				value = input.nextInt();
+				input.nextLine();
 			} catch (InputMismatchException ime) {
 				System.err.println("Incorrect entry. Please input only a positive integer.");
 				input.nextLine();

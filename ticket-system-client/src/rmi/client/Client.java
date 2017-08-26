@@ -214,7 +214,7 @@ public class Client implements Runnable {
 	boolean accessToSystem() throws RemoteException {
 		String choosenOption;
 		while (true) {
-			System.out.println("\n[l]og into system \n[c]reate new accout\n[e]xit the TSS systemS");
+			System.out.println("\n[l]og into system \n[c]reate new accout\n[e]xit the TSS system");
 			if (input.hasNextLine()) {
 				choosenOption = input.nextLine().toLowerCase();
 				if (!choosenOption.matches("[lce]")) {

@@ -103,7 +103,7 @@ public class Admin implements Runnable {
 
 	private void selectEvent() throws RemoteException {
 		int indexForUpdate = InputValidation.getIntegerInput(separator + "\nSelect the [ID]: ");
-
+		//input.nextLine();
 		if (indexForUpdate >= remoteObject.getEventsNumber()) {
 			System.out.println(separator + "\nINVALID INDEX!!!");
 		} else {
@@ -115,7 +115,7 @@ public class Admin implements Runnable {
 				System.out.println(separator + "\nSelected event: \n" + selectedEvent.toString());
 				System.out.println(separator + "\n [s]how participants\n [u]pdate event info\n [m]enu" + separator);
 				if (input.hasNextLine()) {
-					choosenOption = input.nextLine().toLowerCase();
+					choosenOption = input.nextLine();
 					if (!choosenOption.matches("[sum]")) {
 						System.err.println("You entered invalid command!");
 						continue;
@@ -124,14 +124,8 @@ public class Admin implements Runnable {
 					case "s":
 						System.out.println("Participants: " + selectedEvent.showParticipants());
 						break;
-					case "u":
-						// copy old properties for future update
-						Event oldEvent = new Event(selectedEvent.getName(), selectedEvent.getPlace(),
-								selectedEvent.getDate(), selectedEvent.getTicketLeft());
-						// set new properties
-						Event updatedEvent = setEventDetails(selectedEvent);
-						// save the update
-						remoteObject.updatEvent(oldEvent, updatedEvent);
+					case "u":	
+						update(selectedEvent);
 						break;
 					case "m":
 						return;
@@ -141,6 +135,17 @@ public class Admin implements Runnable {
 			}
 
 		}
+
+	}
+
+	private void update(Event event) throws RemoteException {
+
+		// copy old properties for future update
+		Event oldEvent = new Event(event.getName(), event.getPlace(), event.getDate(), event.getTicketLeft());
+		// set new properties
+		Event updatedEvent = setEventDetails(event);
+		// save the update
+		remoteObject.updatEvent(oldEvent, updatedEvent);
 
 	}
 
