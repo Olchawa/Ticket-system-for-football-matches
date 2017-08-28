@@ -36,7 +36,7 @@ public class InputValidation {
 				date = formatter.parse(dateString);
 				value = 1;
 			} catch (ParseException e) {
-				System.out.println("Date format must be: [dd-M-yyyy hh:mm:ss]");
+				System.out.println("Date format must be: [dd-MM-yyyy hh:mm:ss]");
 			}
 		}
 		return date;

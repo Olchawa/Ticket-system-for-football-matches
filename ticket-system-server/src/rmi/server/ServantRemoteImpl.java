@@ -77,7 +77,7 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 
 			}
 		});
-
+		System.out.println(oldKey);
 		// update event information for users
 		usersList.forEach(user -> {
 			if (user.hasKey(oldKey)) {
@@ -89,7 +89,6 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 				}
 			}
 		});
-
 	}
 
 	// user actions
