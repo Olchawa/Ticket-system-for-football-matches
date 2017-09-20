@@ -1,4 +1,4 @@
-package rmi.admin;
+package rmi.user;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -6,23 +6,21 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import rmi.common.Common;
 import rmi.common.Event;
 import rmi.common.InputValidation;
+import rmi.user.UserInterface;
 
-public class Admin implements Runnable {
-
+public class Admin implements Runnable, UserInterface {
 	// global variables
 	Common remoteObject;
 	private static Scanner input = new Scanner(System.in);
-	int adminTypeFlag = 1;
-	String separator = "\n=====================================";
 	List<Event> eventList = null;
 
 	public static void main(String[] args) throws IndexOutOfBoundsException {
-
 		new Thread(new Admin()).start();
-
 	}
 
 	public void run() {
@@ -52,7 +50,6 @@ public class Admin implements Runnable {
 						remoteObject.addEvent(setEventDetails(event));
 						break;
 					case "e":
-						eventList = remoteObject.getEvents();
 						showEvents();
 						break;
 					case "d":
@@ -70,25 +67,26 @@ public class Admin implements Runnable {
 		}
 	}
 
-	private void showEvents() throws RemoteException {
+	@Override
+	public void showEvents() throws RemoteException {
+		eventList = remoteObject.getEvents();
+
 		while (true) {
-
 			String choosenOption;
-
-			System.out.println(remoteObject.showEvents(eventList, adminTypeFlag));
+			printEventDetails(eventList);
 			System.out.println(
 					separator + "\n sort by: [n]ame, [p]lace, [d]ate\n event [s]elect\n back to [m]enu" + separator);
 			if (input.hasNextLine()) {
 				choosenOption = input.nextLine().toLowerCase();
 				if (!choosenOption.matches("[npdsm]")) {
-					System.err.println("You entered invalid command!");
+					System.out.println("You entered invalid command!");
 					continue;
 				}
 				switch (choosenOption) {
 				case "n":
 				case "p":
 				case "d":
-					eventList = remoteObject.sortEvents(remoteObject.getEvents(), choosenOption);
+					eventList = remoteObject.sortEvents(choosenOption);
 					break;
 				case "s":
 					selectEvent();
@@ -103,7 +101,6 @@ public class Admin implements Runnable {
 
 	private void selectEvent() throws RemoteException {
 		int indexForUpdate = InputValidation.getIntegerInput(separator + "\nSelect the [ID]: ");
-		//input.nextLine();
 		if (indexForUpdate >= remoteObject.getEventsNumber()) {
 			System.out.println(separator + "\nINVALID INDEX!!!");
 		} else {
@@ -112,7 +109,8 @@ public class Admin implements Runnable {
 
 			while (true) {
 				String choosenOption;
-				System.out.println(separator + "\nSelected event: \n" + selectedEvent.toString());
+				System.out.println(separator + "\nSelected event: \n" + selectedEvent.toString() + ",\nTICKETS: LEFT - "
+						+ selectedEvent.getTicketLeft() + ", BOOKED - " + selectedEvent.getTicketBooked());
 				System.out.println(separator + "\n [s]how participants\n [u]pdate event info\n [m]enu" + separator);
 				if (input.hasNextLine()) {
 					choosenOption = input.nextLine();
@@ -124,7 +122,7 @@ public class Admin implements Runnable {
 					case "s":
 						System.out.println("Participants: " + selectedEvent.showParticipants());
 						break;
-					case "u":	
+					case "u":
 						update(selectedEvent);
 						break;
 					case "m":
@@ -160,6 +158,15 @@ public class Admin implements Runnable {
 		reEvent.setDate(InputValidation.getDate());
 		reEvent.setTicketLeft(InputValidation.getIntegerInput("Number of tickets available for booking: "));
 		return reEvent;
+	}
+
+	@Override
+	public void printEventDetails(List<Event> eventlist) {
+
+		final AtomicInteger count = new AtomicInteger(0);
+		eventlist.forEach(e -> System.out.println("[" + count.getAndIncrement() + "]" + e.toString() + ", TICKET LEFT: "
+				+ e.getTicketLeft() + ", PARTICIPANTS: " + e.getTicketBooked()));
+
 	}
 
 }

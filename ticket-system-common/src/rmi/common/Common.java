@@ -23,11 +23,9 @@ public interface Common extends Remote {
 	// general actions
 	void saveOnServer(Object object) throws RemoteException;
 
-	String showEvents(List<Event> list, int userTypeFlag) throws RemoteException;
-
 	List<Event> getEvents() throws RemoteException;
 
-	List<Event> sortEvents(List<Event> list, String sortType) throws RemoteException;
+	List<Event> sortEvents(String sortType) throws RemoteException;
 
 	void LogMessage(String userName) throws RemoteException;
 

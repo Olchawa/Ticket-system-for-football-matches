@@ -16,7 +16,7 @@ public class Event implements Serializable {
 	private int ticketBooked;
 
 	LinkedHashMap<String, Integer> participants;
-	
+
 	// constructors
 	public Event() {
 
@@ -39,7 +39,7 @@ public class Event implements Serializable {
 		}
 		participants.computeIfPresent(name, (k, v) -> v + ticket);
 		participants.putIfAbsent(name, ticket);
-		
+
 		ticketLeft -= ticket;
 		ticketBooked += ticket;
 
@@ -56,7 +56,10 @@ public class Event implements Serializable {
 	}
 
 	public boolean hasKey(String userKey) {
-		return participants.containsKey(userKey);
+		if (participants == null) {
+			return false;
+		} else
+			return participants.containsKey(userKey);
 	}
 
 	public void updateEvents(String oldKey, String newKey) {
@@ -134,8 +137,8 @@ public class Event implements Serializable {
 
 	@Override
 	public String toString() {
-		return " NAME: " + name + ",\n PLACE: " + place + ",\n DATE: " + date + ",\n TICKETS: LEFT - " + ticketLeft
-				+ ", BOOKED - " + ticketBooked;
+		return "NAME: " + getName() + ", PLACE: " + getPlace() + ", DATE: "+ getDate();
+		
 	}
 
 	public String toStringForFileName() {

@@ -46,9 +46,9 @@ public class User implements Serializable {
 
 	public boolean hasKey(String oldKey) {
 		if (events == null) {
-			events = new LinkedHashMap<>();
-		}
-		return events.containsKey(oldKey);
+			return false;
+		} else
+			return events.containsKey(oldKey);
 	}
 
 	public void updateEvents(String oldKey, String newKey) {

@@ -1,4 +1,4 @@
-package rmi.client;
+package rmi.user;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -8,19 +8,19 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Scanner;
 
 import rmi.common.User;
+import rmi.user.UserInterface;
 import rmi.common.Common;
 import rmi.common.Event;
 import rmi.common.InputValidation;
 
-public class Client implements Runnable {
+public class Client implements Runnable, UserInterface {
 
 	private static Scanner input = new Scanner(System.in);
 	Common remoteObject;
-	int userFlag = 0;
-	String separator = "\n=====================================";
 	User user = null;
 
 	public static void main(String[] args) throws IndexOutOfBoundsException {
@@ -58,7 +58,7 @@ public class Client implements Runnable {
 					}
 					switch (choosenOption) {
 					case "b":
-						showAllEvents();
+						showEvents();
 						break;
 					case "s":
 						showUserEvents(user);
@@ -71,7 +71,7 @@ public class Client implements Runnable {
 						break;
 					case "d":
 						remoteObject.LogMessage(
-								"User " + user.getFirstName() + "_" + user.getLastName() + " has logged out.");
+								"UserInterface " + user.getFirstName() + "_" + user.getLastName() + " has logged out.");
 						System.out.println("Thanks for using our system!!!");
 						return;
 					}
@@ -86,20 +86,23 @@ public class Client implements Runnable {
 
 	}
 
-	private void showAllEvents() throws RemoteException {
-		
+	@Override
+	public void showEvents() throws RemoteException {
+
 		List<Event> eventList = remoteObject.getEvents();
 		while (true) {
 
 			String choosenOption;
-			System.out.println(remoteObject.showEvents(eventList, userFlag));
+
+			printEventDetails(eventList);
+
 			System.out.println(
 					separator + "\n sort by: [n]ame, [p]lace, [d]ate\n tickets [b]uy\n back to [m]enu" + separator);
 
 			if (input.hasNextLine()) {
 				choosenOption = input.nextLine().toLowerCase();
 				if (!choosenOption.matches("[bnpdm]")) {
-					System.err.println("You entered invalid command!");
+					System.out.println("You entered invalid command!!!\n");
 					continue;
 				}
 				switch (choosenOption) {
@@ -109,7 +112,7 @@ public class Client implements Runnable {
 				case "n":
 				case "p":
 				case "d":
-					eventList = remoteObject.sortEvents(remoteObject.getEvents(), choosenOption);
+					eventList = remoteObject.sortEvents(choosenOption);
 					break;
 				case "m":
 					return;
@@ -210,7 +213,6 @@ public class Client implements Runnable {
 
 	}
 
-	
 	boolean accessToSystem() throws RemoteException {
 		String choosenOption;
 		while (true) {
@@ -225,7 +227,7 @@ public class Client implements Runnable {
 				case "l":
 					if (logging()) {
 						remoteObject.LogMessage(
-								"User " + user.getFirstName() + "_" + user.getLastName() + " has logged in.");
+								"UserInterface " + user.getFirstName() + "_" + user.getLastName() + " has logged in.");
 						System.out.println(separator + "\nWelcome " + user.getFirstName() + "!!!");
 						break;
 					} else {
@@ -283,6 +285,13 @@ public class Client implements Runnable {
 			}
 			return true;
 		}
+	}
+
+	@Override
+	public void printEventDetails(List<Event> eventlist) {
+
+		final AtomicInteger count = new AtomicInteger(0);
+		eventlist.forEach(e -> System.out.println("[" + count.getAndIncrement() + "]" + e.toString()));
 	}
 
 }

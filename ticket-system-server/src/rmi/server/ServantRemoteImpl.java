@@ -1,5 +1,7 @@
 package rmi.server;
 
+import static java.util.Comparator.comparing;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -12,16 +14,16 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import rmi.common.User;
 import rmi.common.Common;
 import rmi.common.Event;
+import rmi.common.User;
 
 public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 
-	// global variables
 	private static final long serialVersionUID = 1L;
 	final String dir = System.getProperty("user.dir");
 
@@ -94,7 +96,6 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 	// user actions
 	@Override
 	public boolean checkIfEmailExist(String email) throws RemoteException {
-		// return usersList.stream().anyMatch(e->e.getEmail().equals(email));
 		return usersList.stream().map(User::getEmail).anyMatch(email::equals);
 	}
 
@@ -170,51 +171,22 @@ public class ServantRemoteImpl extends UnicastRemoteObject implements Common {
 	}
 
 	@Override
-	public List<Event> sortEvents(List<Event> list, String sortType) throws RemoteException {
+	public List<Event> sortEvents( String sortType) throws RemoteException {
 
-		List<Event> listToSort = list;
-
+		List<Event> listToSort = new ArrayList<Event>(eventsList);
 		switch (sortType) {
 		case "n":
-			listToSort.sort((e1, e2) -> e1.getName().compareTo(e2.getName()));
+			listToSort.sort(comparing(Event::getName));
 			break;
 		case "p":
-			listToSort.sort((e1, e2) -> e1.getPlace().compareTo(e2.getPlace()));
+			listToSort.sort(comparing(Event::getPlace));
 			break;
 		case "d":
-			listToSort.sort((e1, e2) -> e1.getDate().compareTo(e2.getDate()));
+			listToSort.sort(comparing(Event::getDate));
 			break;
-
 		}
 		return listToSort;
 	}
-
-	@Override
-	public String showEvents(List<Event> list, int userTypeFlag) throws RemoteException {
-		StringBuilder listShowCase = new StringBuilder();
-		int matchId = 0;
-
-		// userTypeFlag: 1 - Administrator, 0 - Client
-		for (Event e : list) {
-
-			if (e.getTicketLeft() == 0 && userTypeFlag == 0) {
-				listShowCase.append("\nTICKETS HAVE BEEN SOLD OUT!!!!").append(", NAME: " + e.getName())
-						.append(", PLACE: " + e.getPlace()).append(", DATE: " + e.getDate());
-
-			} else {
-				listShowCase.append("\n[" + matchId + "]").append(" NAME: " + e.getName())
-						.append(", PLACE: " + e.getPlace()).append(", DATE: " + e.getDate());
-				if (userTypeFlag == 1) {
-					listShowCase.append(", TICKET LEFT: " + e.getTicketLeft());
-					listShowCase.append(", PARTICIPANTS: " + e.getTicketBooked());
-
-				}
-			}
-			matchId++;
-		}
-		return listShowCase.toString();
-	}
-
 	@Override
 	public void saveOnServer(Object object) throws RemoteException {
 

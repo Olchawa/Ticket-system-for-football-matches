@@ -10,13 +10,13 @@ import java.text.SimpleDateFormat;
 import rmi.common.Common;
 import rmi.common.Event;
 
-public class EventInit implements Runnable {
+public class EventsInitialization implements Runnable {
 
 	Common remoteObject;
 
 	public static void main(String[] args) throws IndexOutOfBoundsException {
 
-		new Thread(new EventInit()).start();
+		new Thread(new EventsInitialization()).start();
 
 	}
 
